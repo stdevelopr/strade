@@ -9,17 +9,17 @@ api_secret = os.environ.get("API_SECRET")
 client = Client(api_key, api_secret)
 collection = "BINANCE"
 
-def binance_connect()->dict:
+def binance_connect():
     response = client.get_exchange_info()
     return response
 
-def get_all_symbols()->list:
+def get_all_symbols():
     resp = client.get_exchange_info()
     symbols = [i['symbol'] for i in resp['symbols']]
     return symbols
 
 
-def query_parse_historical_data(symbol)->"multiple lists":
+def query_parse_historical_data(symbol):
     # [[
     #     1499040000000,      # Open time
     #     "0.01634790",       # Open

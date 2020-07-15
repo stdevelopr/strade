@@ -1,6 +1,5 @@
 from flask import Blueprint, jsonify
 from .connect import binance_connect, process_ma, get_all_symbols, query_parse_historical_data, save_symbol_data_to_mongo, process_macd
-from app.trading import buy
 import json
 from app.extensions import mongo
 
@@ -68,10 +67,10 @@ def calculate_macd_route(symbol):
     r = process_macd(symbol)
     return jsonify({"macd": str(r)})
 
-@binance_bp.route('/trade')
-def trade():
+@binance_bp.route('/trade/<symbol>')
+def trade(symbol):
     from datetime import datetime
-    data = mongo.db["BINANCE"].find_one({"symbol":"ETCBTC"}, {"_id":0, "open_time":1, "MACD":1, "close": 1})
+    data = mongo.db["BINANCE"].find_one({"symbol":symbol}, {"_id":0, "open_time":1, "MACD":1, "close": 1})
     ot = data["open_time"]
 
 
@@ -97,7 +96,8 @@ def trade():
                 buy_sign = False
                 print("SELL", dt[i], close[i])
 
-    print(sum(profit))
+    # print(sum(profit))
+    profit_sum = sum(profit)
 
     # import plotly.graph_objects as go
     # from datetime import datetime
@@ -114,4 +114,4 @@ def trade():
     # fig.show()
 
 
-    return jsonify({"open_time": str(ot), "macd": str(macd)})
+    return jsonify({"SYMBOL": symbol, "profit": profit_sum})

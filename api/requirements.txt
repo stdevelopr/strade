@@ -1,0 +1,5 @@
+flask
+python-binance
+python-dotenv
+flask_pymongo
+numpy
