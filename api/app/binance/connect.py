@@ -14,6 +14,7 @@ def binance_connect():
     return response
 
 def get_all_symbols():
+    """ Returns a list of symbols directly from the exchange """
     resp = client.get_exchange_info()
     symbols = [i['symbol'] for i in resp['symbols']]
     return symbols

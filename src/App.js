@@ -1,20 +1,29 @@
 import React from "react";
-import "./App.css";
+import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
+import Dropdown from "./components/DropdownSymbols";
+import PlotArea from "./components/PlotArea";
+import "semantic-ui-css/semantic.min.css";
 
-function App() {
+export default function App() {
   return (
-    <div className="App">
-      <button
-        onClick={() => {
-          fetch("/binance/trade/ETCBTC")
-            .then(response => response.json())
-            .then(response => console.log(response));
-        }}
-      >
-        Click
-      </button>
-    </div>
+    <Router>
+      <div>
+        <Switch>
+          <Route path="/">
+            <Home />
+          </Route>
+        </Switch>
+      </div>
+    </Router>
   );
 }
 
-export default App;
+function Home() {
+  return (
+    <div>
+      {" "}
+      <Dropdown />
+      <PlotArea symbol={"LTCBTC"} />
+    </div>
+  );
+}

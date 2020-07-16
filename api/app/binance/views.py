@@ -4,7 +4,7 @@ import json
 from app.extensions import mongo
 
 
-binance_bp = Blueprint('binance', __name__, url_prefix='/binance')
+binance_bp = Blueprint('binance', __name__, url_prefix='/api/binance')
 
 @binance_bp.route('/')
 def index():
@@ -23,7 +23,7 @@ def extract_symbol(symbol):
     """ Fetch data for a specific symbol and process it to database """
     ot,o,l,h,c,v,ct,nots,tbv,tqv = query_parse_historical_data(symbol)
     save_symbol_data_to_mongo(symbol,ot,o,l,h,c,v,ct,nots,tbv,tqv)
-    return "OK"
+    return jsonify({"o":o, "h":h, "l":l, "c":c, "ot":ot, "v":v, "ct":ct})
 
 
 @binance_bp.route('/plot/<symbol>')
@@ -63,7 +63,6 @@ def calculate_ma_route(symbol):
 @binance_bp.route('/process_macd/<symbol>')
 def calculate_macd_route(symbol):
     """Calculate the MACD for a symbol and save it to database"""
-
     r = process_macd(symbol)
     return jsonify({"macd": str(r)})
 
@@ -82,6 +81,7 @@ def trade(symbol):
     profit = []
     buy = []
     sell = []
+    buy_sign = False
     for i in range(len(macd)):
         if i!=0 and i!=len(macd)-1:
             if macd[i] <= 0 and macd[i+1] >0:
