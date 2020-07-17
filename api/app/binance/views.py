@@ -1,7 +1,8 @@
 from flask import Blueprint, jsonify
-from .connect import binance_connect, process_ma, get_all_symbols, query_parse_historical_data, save_symbol_data_to_mongo, process_macd
+from .connect import binance_connect, parse_binance_response
+from .db import process_ma,save_symbol_data_to_mongo, process_macd, get_all_symbols_names, get_symbol_data
 import json
-from app.extensions import mongo
+from api.app.extensions import mongo_client
 
 
 binance_bp = Blueprint('binance', __name__, url_prefix='/api/binance')
@@ -15,14 +16,18 @@ def index():
 @binance_bp.route('/all_symbols')
 def all_pairs():
     """ Fetch and return a list with all symbols """
-    resp = get_all_symbols()
-    return jsonify(resp)
+    try:
+        resp = get_all_symbols_names()
+        return jsonify(resp)
+    except:
+        return jsonify("error"),500
 
 @binance_bp.route('/extract/<symbol>')
 def extract_symbol(symbol):
-    """ Fetch data for a specific symbol and process it to database """
-    ot,o,l,h,c,v,ct,nots,tbv,tqv = query_parse_historical_data(symbol)
-    save_symbol_data_to_mongo(symbol,ot,o,l,h,c,v,ct,nots,tbv,tqv)
+    """ Returns data for a specific symbol """
+
+    ot,o,l,h,c,v,ct,nots,tbv,tqv = get_symbol_data(symbol)
+    # save_symbol_data_to_mongo(symbol,ot,o,l,h,c,v,ct,nots,tbv,tqv)
     return jsonify({"o":o, "h":h, "l":l, "c":c, "ot":ot, "v":v, "ct":ct})
 
 
@@ -30,7 +35,7 @@ def extract_symbol(symbol):
 def candlestick_route(symbol):
     """ Fetch data and plot it for a specific symbol"""
 
-    ot,o,l,h,c,v,ct,nots,tbv,tqv = query_parse_historical_data(symbol)
+    ot,o,l,h,c,v,ct,nots,tbv,tqv = parse_binance_response(symbol)
 
     import plotly.graph_objects as go
     from datetime import datetime
