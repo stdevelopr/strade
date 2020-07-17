@@ -7,15 +7,15 @@ function PlotArea({ symbol }) {
 
   useEffect(() => {
     let data_dict = [];
-    axios.get("/api/binance/extract/" + symbol).then(resp => {
-      for (let i = 0; i < 500; i++) {
+    axios.get("/api/binance/get/" + symbol).then(resp => {
+      for (let i = 0; i < resp.data["close_time"].length; i++) {
         data_dict.push({
-          open: resp.data["o"][i],
-          high: resp.data["h"][i],
-          low: resp.data["l"][i],
-          close: resp.data["c"][i],
-          volume: resp.data["v"][i],
-          date: new Date(resp.data["ct"][i])
+          open: resp.data["open"][i],
+          high: resp.data["high"][i],
+          low: resp.data["low"][i],
+          close: resp.data["close"][i],
+          volume: resp.data["volume"][i],
+          date: new Date(resp.data["close_time"][i])
         });
       }
       setData(data_dict);

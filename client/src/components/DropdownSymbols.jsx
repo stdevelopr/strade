@@ -5,8 +5,13 @@ import { useSelector, useDispatch } from "react-redux";
 
 const DropdownSymbols = () => {
   const [symbols, setSymbols] = useState([]);
+  const contextSymbol = useSelector(state => state.contextSymbol);
   const [selectedSymbol, setSelectedSymbol] = useState("");
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    setSelectedSymbol(contextSymbol);
+  }, [contextSymbol]);
 
   const handleChange = (event, data) => {
     setSelectedSymbol(data["value"]);
@@ -35,6 +40,7 @@ const DropdownSymbols = () => {
         placeholder="Symbol"
         search
         selection
+        value={contextSymbol}
         onChange={(e, data) => handleChange(e, data)}
         options={symbols}
       />

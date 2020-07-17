@@ -1,4 +1,4 @@
-const initialState = { contextSymbol: "ETCBTC" };
+const initialState = { contextSymbol: "ETHBTC" };
 
 export default function symbolReducer(state = initialState, action) {
   if (action.type === "setContextSymbol") {
