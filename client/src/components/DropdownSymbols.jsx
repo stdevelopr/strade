@@ -25,12 +25,6 @@ const DropdownSymbols = () => {
     });
   }, []);
 
-  const downloadSymbol = () => {
-    axios.get("api/binance/trade/" + selectedSymbol).then(res => {
-      console.log(res.data);
-    });
-  };
-
   const getMacd = () => {
     axios.get("api/binance/process_macd/" + selectedSymbol);
   };
@@ -44,8 +38,6 @@ const DropdownSymbols = () => {
         onChange={(e, data) => handleChange(e, data)}
         options={symbols}
       />
-
-      <button onClick={() => downloadSymbol()}>Trade</button>
       <button onClick={() => getMacd()}>Calculate MACD</button>
     </div>
   );

@@ -8,6 +8,12 @@ import { XAxis, YAxis } from "react-stockcharts/lib/axes";
 import { discontinuousTimeScaleProvider } from "react-stockcharts/lib/scale";
 import { fitWidth } from "react-stockcharts/lib/helper";
 import { last } from "react-stockcharts/lib/utils";
+import {
+  Annotate,
+  SvgPathAnnotation,
+  buyPath,
+  sellPath
+} from "react-stockcharts/lib/annotation";
 
 class CandleStickStockScaleChart extends React.Component {
   render() {
@@ -23,6 +29,26 @@ class CandleStickStockScaleChart extends React.Component {
       xAccessor(last(data)),
       xAccessor(data[data.length - 100])
     ];
+
+    const defaultAnnotationProps = {
+      onClick: console.log.bind(console)
+    };
+
+    const longAnnotationProps = {
+      ...defaultAnnotationProps,
+      y: ({ yScale, datum }) => yScale(datum.low),
+      fill: "#006517",
+      path: buyPath,
+      tooltip: "Go long"
+    };
+
+    const shortAnnotationProps = {
+      ...defaultAnnotationProps,
+      y: ({ yScale, datum }) => yScale(datum.high),
+      fill: "#FF0000",
+      path: sellPath,
+      tooltip: "Go short"
+    };
 
     return (
       <ChartCanvas
@@ -42,6 +68,17 @@ class CandleStickStockScaleChart extends React.Component {
           <XAxis axisAt="bottom" orient="bottom" ticks={6} />
           <YAxis axisAt="left" orient="left" ticks={5} />
           <CandlestickSeries />
+
+          <Annotate
+            with={SvgPathAnnotation}
+            when={d => d.longShort === "LONG"}
+            usingProps={longAnnotationProps}
+          />
+          <Annotate
+            with={SvgPathAnnotation}
+            when={d => d.longShort === "SHORT"}
+            usingProps={shortAnnotationProps}
+          />
         </Chart>
       </ChartCanvas>
     );
