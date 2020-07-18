@@ -20,11 +20,34 @@ function PlotArea({ symbol }) {
 
     setData(new_data);
   };
+
+  const insertMacd = (macd, signal, divergence) => {
+    let new_data = [];
+    for (let i = 0; i < data.length; i++) {
+      new_data.push(data[i]);
+      new_data[i]["macd"] = {
+        macd: macd[i],
+        signal: signal[i],
+        divergence: divergence[i]
+      };
+    }
+
+    setData(new_data);
+  };
   const downloadSymbol = () => {
     axios.get("api/binance/trade/" + symbol).then(res => {
       setLongShort(res.data["data"]["buy"], res.data["data"]["sell"]);
       setProfit(res.data["data"]["profit"]);
     });
+  };
+
+  const getMACD = symbol => {
+    axios
+      .get("api/binance/macd/" + symbol)
+      .then(res => JSON.parse(res.data.replace(/\bNaN\b/g, "null")))
+      .then(data =>
+        insertMacd(data["macd"], data["signal"], data["divergence"])
+      );
   };
 
   useEffect(() => {
@@ -50,6 +73,7 @@ function PlotArea({ symbol }) {
   return (
     <div style={{ width: "98%", margin: "auto" }}>
       <button onClick={() => downloadSymbol()}>Simulate MACD Trade</button>
+      <button onClick={() => getMACD(symbol)}>Plot MACD</button>
       <CandleStickStockScaleChart data={data} />
       <h3>Profit {profit}</h3>
     </div>
