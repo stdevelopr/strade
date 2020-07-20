@@ -1,8 +1,14 @@
 import React from "react";
 import PropTypes from "prop-types";
-
+import { format } from "d3-format";
+import { timeFormat } from "d3-time-format";
 import { ChartCanvas, Chart } from "react-stockcharts";
 import { XAxis, YAxis } from "react-stockcharts/lib/axes";
+import {
+  CrossHairCursor,
+  MouseCoordinateX,
+  MouseCoordinateY
+} from "react-stockcharts/lib/coordinates";
 
 import { fitWidth } from "react-stockcharts/lib/helper";
 import { last } from "react-stockcharts/lib/utils";
@@ -12,8 +18,13 @@ import {
   buyPath,
   sellPath
 } from "react-stockcharts/lib/annotation";
+import { OHLCTooltip } from "react-stockcharts/lib/tooltip";
 
-import { CandlestickSeries, MACDSeries } from "react-stockcharts/lib/series";
+import {
+  CandlestickSeries,
+  MACDSeries,
+  LineSeries
+} from "react-stockcharts/lib/series";
 
 import { discontinuousTimeScaleProvider } from "react-stockcharts/lib/scale";
 
@@ -37,6 +48,8 @@ class CandleStickStockScaleChart extends React.Component {
     const { data, xScale, xAccessor, displayXAccessor } = xScaleProvider(
       initialData
     );
+
+    console.log(data[0]);
 
     const xExtents = [
       xAccessor(last(data)),
@@ -77,10 +90,17 @@ class CandleStickStockScaleChart extends React.Component {
         displayXAccessor={displayXAccessor}
         xExtents={xExtents}
       >
-        <Chart id={1} yExtents={d => [d.high, d.low]} height={400}>
+        <Chart
+          id={1}
+          yExtents={d => [d.high, d.low]}
+          padding={{ top: 10, bottom: 10 }}
+          height={400}
+        >
           <XAxis axisAt="bottom" orient="bottom" ticks={6} />
           <YAxis axisAt="left" orient="left" ticks={5} />
           <CandlestickSeries />
+          {/* <LineSeries yAccessor={d => d.close} /> */}
+          <OHLCTooltip forChart={1} origin={[-40, 0]} />
 
           <Annotate
             with={SvgPathAnnotation}
@@ -92,7 +112,18 @@ class CandleStickStockScaleChart extends React.Component {
             when={d => d.longShort === "SHORT"}
             usingProps={shortAnnotationProps}
           />
+          <MouseCoordinateX
+            at="bottom"
+            orient="bottom"
+            displayFormat={timeFormat("%Y-%m-%d")}
+          />
+          <MouseCoordinateY
+            at="left"
+            orient="left"
+            displayFormat={format(".4s")}
+          />
         </Chart>
+        <CrossHairCursor />
         <Chart
           id={2}
           yExtents={d => d.macd}

@@ -56,12 +56,12 @@ function PlotArea({ symbol }) {
     axios.get("/api/binance/get/" + symbol).then(resp => {
       for (let i = 0; i < resp.data["close_time"].length; i++) {
         data_dict.push({
+          date: new Date(resp.data["close_time"][i]),
           open: resp.data["open"][i],
           high: resp.data["high"][i],
           low: resp.data["low"][i],
           close: resp.data["close"][i],
-          volume: resp.data["volume"][i],
-          date: new Date(resp.data["close_time"][i])
+          volume: resp.data["volume"][i]
         });
       }
       setData(data_dict);
