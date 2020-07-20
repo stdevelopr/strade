@@ -49,8 +49,6 @@ class CandleStickStockScaleChart extends React.Component {
       initialData
     );
 
-    console.log(data[0]);
-
     const xExtents = [
       xAccessor(last(data)),
       xAccessor(data[data.length - 100])
@@ -124,17 +122,19 @@ class CandleStickStockScaleChart extends React.Component {
           />
         </Chart>
         <CrossHairCursor />
-        <Chart
-          id={2}
-          yExtents={d => d.macd}
-          origin={(w, h) => [0, h - 150]}
-          padding={{ top: 20, bottom: 10 }}
-          height={150}
-        >
-          <XAxis axisAt="bottom" orient="bottom" />
-          <YAxis axisAt="right" orient="right" ticks={2} />
-          <MACDSeries yAccessor={d => d.macd} {...macdAppearance} />
-        </Chart>
+        {this.props.macd && (
+          <Chart
+            id={2}
+            yExtents={d => d.macd}
+            origin={(w, h) => [0, h - 150]}
+            padding={{ top: 20, bottom: 10 }}
+            height={150}
+          >
+            <XAxis axisAt="bottom" orient="bottom" />
+            <YAxis axisAt="right" orient="right" ticks={2} />
+            <MACDSeries yAccessor={d => d.macd} {...macdAppearance} />
+          </Chart>
+        )}
       </ChartCanvas>
     );
   }

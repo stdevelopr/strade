@@ -5,6 +5,7 @@ import axios from "axios";
 function PlotArea({ symbol }) {
   const [data, setData] = useState(null);
   const [profit, setProfit] = useState("");
+  const [displayMACD, setDisplayMACD] = useState(false);
 
   const setLongShort = (buy_arr, sell_arr) => {
     let new_data = [];
@@ -33,6 +34,7 @@ function PlotArea({ symbol }) {
     }
 
     setData(new_data);
+    setDisplayMACD(true);
   };
   const downloadSymbol = () => {
     axios.get("api/binance/trade/" + symbol).then(res => {
@@ -74,7 +76,7 @@ function PlotArea({ symbol }) {
     <div style={{ width: "98%", margin: "auto" }}>
       <button onClick={() => downloadSymbol()}>Simulate MACD Trade</button>
       <button onClick={() => getMACD(symbol)}>Plot MACD</button>
-      <CandleStickStockScaleChart data={data} />
+      <CandleStickStockScaleChart data={data} macd={displayMACD} />
       <h3>Profit {profit}</h3>
     </div>
   );
