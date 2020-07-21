@@ -18,11 +18,17 @@ import {
   buyPath,
   sellPath
 } from "react-stockcharts/lib/annotation";
-import { OHLCTooltip } from "react-stockcharts/lib/tooltip";
+import {
+  OHLCTooltip,
+  MovingAverageTooltip,
+  RSITooltip,
+  SingleValueTooltip
+} from "react-stockcharts/lib/tooltip";
 
 import {
   CandlestickSeries,
   MACDSeries,
+  RSISeries,
   LineSeries
 } from "react-stockcharts/lib/series";
 
@@ -76,7 +82,7 @@ class CandleStickStockScaleChart extends React.Component {
 
     return (
       <ChartCanvas
-        height={650}
+        height={800}
         ratio={ratio}
         width={width}
         margin={{ left: 80, right: 80, top: 30, bottom: 30 }}
@@ -98,7 +104,7 @@ class CandleStickStockScaleChart extends React.Component {
           <YAxis axisAt="left" orient="left" ticks={5} />
           <CandlestickSeries />
           {/* <LineSeries yAccessor={d => d.close} /> */}
-          <OHLCTooltip forChart={1} origin={[-40, 0]} />
+          <OHLCTooltip forChart={1} origin={[0, 0]} />
 
           <Annotate
             with={SvgPathAnnotation}
@@ -126,13 +132,42 @@ class CandleStickStockScaleChart extends React.Component {
           <Chart
             id={2}
             yExtents={d => d.macd}
-            origin={(w, h) => [0, h - 150]}
+            origin={(w, h) => [0, h - 300]}
             padding={{ top: 20, bottom: 10 }}
             height={150}
           >
             <XAxis axisAt="bottom" orient="bottom" />
             <YAxis axisAt="right" orient="right" ticks={2} />
             <MACDSeries yAccessor={d => d.macd} {...macdAppearance} />
+          </Chart>
+        )}
+        {this.props.rsi && (
+          <Chart
+            id={3}
+            yExtents={[0, 100]}
+            height={125}
+            origin={(w, h) => [0, h - 125]}
+          >
+            <XAxis
+              axisAt="bottom"
+              orient="bottom"
+              showTicks={false}
+              outerTickSize={0}
+            />
+            <YAxis axisAt="right" orient="right" tickValues={[30, 50, 70]} />
+            <MouseCoordinateY
+              at="right"
+              orient="right"
+              displayFormat={format(".2f")}
+            />
+
+            <RSISeries yAccessor={d => d.rsi} />
+
+            <RSITooltip
+              origin={[-38, 15]}
+              yAccessor={d => d.rsi}
+              options={{ windowSize: 14 }}
+            />
           </Chart>
         )}
       </ChartCanvas>
