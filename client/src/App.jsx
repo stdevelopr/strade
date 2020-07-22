@@ -5,11 +5,11 @@ import Dropdown from "./components/DropdownSymbols";
 import PlotArea from "./components/PlotArea";
 import "semantic-ui-css/semantic.min.css";
 
-import { configureStore } from "@reduxjs/toolkit";
-import rootReducer from "./reducers";
+// import { configureStore } from "@reduxjs/toolkit";
+import store from "./store";
 
 import { useSelector } from "react-redux";
-const store = configureStore({ reducer: rootReducer });
+// const store = configureStore({ reducer: rootReducer });
 
 export default function App() {
   return (
@@ -28,7 +28,7 @@ export default function App() {
 }
 
 function Home() {
-  const symbol = useSelector(state => state.contextSymbol);
+  const symbol = useSelector(state => state.symbols.contextSymbol);
   return (
     <div>
       {" "}

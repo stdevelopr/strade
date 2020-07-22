@@ -1,33 +1,24 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { Dropdown } from "semantic-ui-react";
-import axios from "axios";
 import { useSelector, useDispatch } from "react-redux";
+import symbolSlice from "../redux/symbols/symbolsSlice";
+import { getAllSymbols } from "../thunks/symbols";
 
 const DropdownSymbols = () => {
-  const [symbols, setSymbols] = useState([]);
-  const contextSymbol = useSelector(state => state.contextSymbol);
-  const [selectedSymbol, setSelectedSymbol] = useState("");
   const dispatch = useDispatch();
+  const contextSymbol = useSelector(state => state.symbols.contextSymbol);
+  const allSymbols = useSelector(state => state.symbols.allSymbols);
+
+  const { setContextSymbol } = symbolSlice.actions;
 
   useEffect(() => {
-    setSelectedSymbol(contextSymbol);
-  }, [contextSymbol]);
+    dispatch(getAllSymbols());
+  }, [dispatch]);
 
   const handleChange = (event, data) => {
-    setSelectedSymbol(data["value"]);
-    dispatch({ type: "setContextSymbol", value: data["value"] });
+    dispatch(setContextSymbol(data["value"]));
   };
 
-  useEffect(() => {
-    axios.get(`api/binance/all_symbols`).then(res => {
-      let symbols_map = res.data.map(s => ({ text: s, value: s }));
-      setSymbols(symbols_map);
-    });
-  }, []);
-
-  const getMacd = () => {
-    axios.get("api/binance/process_macd/" + selectedSymbol);
-  };
   return (
     <div>
       <Dropdown
@@ -36,9 +27,8 @@ const DropdownSymbols = () => {
         selection
         value={contextSymbol}
         onChange={(e, data) => handleChange(e, data)}
-        options={symbols}
+        options={allSymbols}
       />
-      <button onClick={() => getMacd()}>Calculate MACD</button>
     </div>
   );
 };
