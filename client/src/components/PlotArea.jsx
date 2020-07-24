@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import CandleStickStockScaleChart from "./CandlestickStockScaleChart";
-import axios from "axios";
 import { useSelector, useDispatch } from "react-redux";
+import Dropdown from "./DropdownSymbols";
 import {
   simulateTradeThunk,
   simulateTradeMACDCrossThunk,
@@ -9,25 +9,21 @@ import {
 } from "../thunks/simulateTrade";
 import {
   getSymbolData,
-  getSymbolIndicatorMACD,
-  getSymbolIndicatorRSI
+  getIndicatorMACD,
+  getIndicatorRSI
 } from "../thunks/symbols";
 
-function PlotArea({ symbol }) {
+function PlotArea() {
   const [data, setData] = useState(null);
   const [displayMACD, setDisplayMACD] = useState(false);
   const [displayRSI, setDisplayRSI] = useState(false);
 
   const dispatch = useDispatch();
-
+  const symbol = useSelector(state => state.symbols.contextSymbol);
   const simulateTrade = useSelector(state => state.simulateTrade);
   const symbolData = useSelector(state => state.symbols.symbolData);
-  const symbolIndicatorMACD = useSelector(
-    state => state.symbols.symbolIndicatorMACD
-  );
-  const symbolIndicatorRSI = useSelector(
-    state => state.symbols.symbolIndicatorRSI
-  );
+  const indicatorMACD = useSelector(state => state.symbols.indicatorMACD);
+  const symbolIndicatorRSI = useSelector(state => state.symbols.indicatorRSI);
 
   useEffect(() => {
     if (data && simulateTrade.buyTimes.length != 0)
@@ -43,13 +39,13 @@ function PlotArea({ symbol }) {
   }, [symbolData]);
 
   useEffect(() => {
-    if (symbolIndicatorMACD)
+    if (indicatorMACD)
       insertMacd(
-        symbolIndicatorMACD.macd,
-        symbolIndicatorMACD.signal,
-        symbolIndicatorMACD.histogram
+        indicatorMACD.macd,
+        indicatorMACD.signal,
+        indicatorMACD.histogram
       );
-  }, [symbolIndicatorMACD]);
+  }, [indicatorMACD]);
 
   useEffect(() => {
     if (symbolIndicatorRSI) insertRSI(symbolIndicatorRSI);
@@ -108,23 +104,8 @@ function PlotArea({ symbol }) {
   if (!data) return "loading";
 
   return (
-    <div style={{ width: "98%", margin: "auto" }}>
-      <button onClick={() => dispatch(simulateTradeThunk(symbol))}>
-        Simulate MACD Trade
-      </button>
-
-      <button onClick={() => dispatch(simulateTradeMACDCrossThunk(symbol))}>
-        Simulate MACD Cross Trade
-      </button>
-      <button onClick={() => dispatch(simulateTradeRSIThunk(symbol))}>
-        Simulate RSI Trade
-      </button>
-      <button onClick={() => dispatch(getSymbolIndicatorRSI(symbol))}>
-        Plot RSI
-      </button>
-      <button onClick={() => dispatch(getSymbolIndicatorMACD(symbol))}>
-        Plot MACD
-      </button>
+    <div>
+      <Dropdown />
       <p>Profit {simulateTrade.profit}</p>
       <p> Ntrades {simulateTrade.buyTimes.length}</p>
       <CandleStickStockScaleChart

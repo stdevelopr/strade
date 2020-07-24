@@ -2,10 +2,10 @@ import axios from "axios";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 
 export const simulateTradeThunk = createAsyncThunk(
-  "simulate/trade",
+  "simulate/trade/macdSimple",
   async (symbol, thunkAPI) => {
     let resp = {};
-    await axios.get("api/binance/trade/" + symbol).then(res => {
+    await axios.get("api/binance/simulate/macd_simple/" + symbol).then(res => {
       resp.profit = res.data.data.profit;
       resp.buyTimes = res.data.data.buy;
       resp.sellTimes = res.data.data.sell;

@@ -29,12 +29,12 @@ export const getSymbolData = createAsyncThunk(
   }
 );
 
-export const getSymbolIndicatorMACD = createAsyncThunk(
-  "symbols/getSymbolIndicator/MACD",
+export const getIndicatorMACD = createAsyncThunk(
+  "symbols/indicator/MACD",
   async (symbol, APIThunk) => {
     let response;
     await axios
-      .get("api/binance/macd/" + symbol)
+      .get("api/binance/indicator/macd/" + symbol)
       .then(res => JSON.parse(res.data.replace(/\bNaN\b/g, "null")))
       .then(
         data =>
@@ -48,12 +48,12 @@ export const getSymbolIndicatorMACD = createAsyncThunk(
   }
 );
 
-export const getSymbolIndicatorRSI = createAsyncThunk(
-  "symbols/getSymbolIndicator/RSI",
+export const getIndicatorRSI = createAsyncThunk(
+  "symbols/indicator/RSI",
   async (symbol, APIThunk) => {
     let response;
     await axios
-      .get("api/binance/rsi/" + symbol)
+      .get("api/binance/indicator/rsi/" + symbol)
       .then(res => JSON.parse(res.data.replace(/\bNaN\b/g, "null")))
       .then(data => (response = data["data"]));
     return response;

@@ -1,15 +1,10 @@
 import React from "react";
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 import { Provider } from "react-redux";
-import Dropdown from "./components/DropdownSymbols";
-import PlotArea from "./components/PlotArea";
+import Home from "./pages/Home";
 import "semantic-ui-css/semantic.min.css";
 
-// import { configureStore } from "@reduxjs/toolkit";
 import store from "./store";
-
-import { useSelector } from "react-redux";
-// const store = configureStore({ reducer: rootReducer });
 
 export default function App() {
   return (
@@ -24,16 +19,5 @@ export default function App() {
         </div>
       </Router>
     </Provider>
-  );
-}
-
-function Home() {
-  const symbol = useSelector(state => state.symbols.contextSymbol);
-  return (
-    <div>
-      {" "}
-      <Dropdown />
-      <PlotArea symbol={symbol} />
-    </div>
   );
 }

@@ -2,8 +2,8 @@ import { createSlice } from "@reduxjs/toolkit";
 import {
   getAllSymbols,
   getSymbolData,
-  getSymbolIndicatorMACD,
-  getSymbolIndicatorRSI
+  getIndicatorMACD,
+  getIndicatorRSI
 } from "../../thunks/symbols";
 
 const symbolSlice = createSlice({
@@ -41,25 +41,25 @@ const symbolSlice = createSlice({
       state.loading = false;
       state.error = action.error.message;
     },
-    [getSymbolIndicatorMACD.pending]: (state, action) => {
+    [getIndicatorMACD.pending]: (state, action) => {
       state.loading = true;
     },
-    [getSymbolIndicatorMACD.fulfilled]: (state, action) => {
+    [getIndicatorMACD.fulfilled]: (state, action) => {
       state.loading = false;
-      state.symbolIndicatorMACD = action.payload;
+      state.indicatorMACD = action.payload;
     },
-    [getSymbolIndicatorMACD.rejected]: (state, action) => {
+    [getIndicatorMACD.rejected]: (state, action) => {
       state.loading = false;
       state.error = action.error.message;
     },
-    [getSymbolIndicatorRSI.pending]: (state, action) => {
+    [getIndicatorRSI.pending]: (state, action) => {
       state.loading = true;
     },
-    [getSymbolIndicatorRSI.fulfilled]: (state, action) => {
+    [getIndicatorRSI.fulfilled]: (state, action) => {
       state.loading = false;
-      state.symbolIndicatorRSI = action.payload;
+      state.indicatorRSI = action.payload;
     },
-    [getSymbolIndicatorRSI.rejected]: (state, action) => {
+    [getIndicatorRSI.rejected]: (state, action) => {
       state.loading = false;
       state.error = action.error.message;
     }

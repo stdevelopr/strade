@@ -82,7 +82,7 @@ class CandleStickStockScaleChart extends React.Component {
 
     return (
       <ChartCanvas
-        height={800}
+        height={700}
         ratio={ratio}
         width={width}
         margin={{ left: 80, right: 80, top: 30, bottom: 30 }}
@@ -104,7 +104,7 @@ class CandleStickStockScaleChart extends React.Component {
           <YAxis axisAt="left" orient="left" ticks={5} />
           <CandlestickSeries />
           {/* <LineSeries yAccessor={d => d.close} /> */}
-          <OHLCTooltip forChart={1} origin={[0, 0]} />
+          <OHLCTooltip forChart={1} origin={[0, -20]} />
 
           <Annotate
             with={SvgPathAnnotation}
