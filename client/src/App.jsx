@@ -4,7 +4,7 @@ import { Provider } from "react-redux";
 import Home from "./pages/Home";
 import "semantic-ui-css/semantic.min.css";
 
-import store from "./store";
+import store from "./redux/store";
 
 export default function App() {
   return (

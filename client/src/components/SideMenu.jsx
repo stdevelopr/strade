@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import Radium from "radium";
 import { useSelector, useDispatch } from "react-redux";
+import IndicatorsPanel from "./MenuPanels/IndicatorsPanel";
+import SimulateTradePanel from "./MenuPanels/SimulateTradePanel";
 import {
   simulateTradeThunk,
   simulateTradeMACDCrossThunk,
@@ -14,6 +16,7 @@ import {
 
 const SideMenu = () => {
   const open = useSelector(state => state.pageContext.openSideNavMenu);
+  const context = useSelector(state => state.menuContext.navSideMenuContext);
   const dispatch = useDispatch();
   const symbol = useSelector(state => state.symbols.contextSymbol);
   return (
@@ -27,21 +30,8 @@ const SideMenu = () => {
           open ? { display: "inline-grid" } : { display: "none" }
         )}
       >
-        <button onClick={() => dispatch(simulateTradeThunk(symbol))}>
-          Simulate MACD Trade
-        </button>
-        <button onClick={() => dispatch(simulateTradeMACDCrossThunk(symbol))}>
-          Simulate MACD Cross Trade
-        </button>
-        <button onClick={() => dispatch(simulateTradeRSIThunk(symbol))}>
-          Simulate RSI Trade
-        </button>
-        <button onClick={() => dispatch(getIndicatorRSI(symbol))}>
-          Plot RSI
-        </button>
-        <button onClick={() => dispatch(getIndicatorMACD(symbol))}>
-          Plot MACD
-        </button>
+        {context == "indicators" && <IndicatorsPanel />}
+        {context == "simulateTrade" && <SimulateTradePanel />}
       </div>
     </div>
   );

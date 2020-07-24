@@ -1,15 +1,17 @@
 import { configureStore } from "@reduxjs/toolkit";
 // import simulateTradeReducer from "./redux/simulateTrade/simulateTradeReducer";
-import { symbolsReducer } from "./redux/symbols/symbolsSlice";
-import { simulateTradeReducer } from "./redux/simulateTrade/simulateTradeSlice";
-import { pageContextReducer } from "./redux/pageContext/pageContextSlice";
+import { symbolsReducer } from "./symbols/symbolsSlice";
+import { simulateTradeReducer } from "./simulateTrade/simulateTradeSlice";
+import { pageContextReducer } from "./pageContext/pageContextSlice";
+import { menuContextReducer } from "./menuContext/menuContextSlice";
 
 // import { combineReducers } from "redux";
 
 const rootReducer = {
   simulateTrade: simulateTradeReducer,
   symbols: symbolsReducer,
-  pageContext: pageContextReducer
+  pageContext: pageContextReducer,
+  menuContext: menuContextReducer
 };
 const store = configureStore({ reducer: rootReducer });
 
