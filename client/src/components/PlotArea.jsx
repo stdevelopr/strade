@@ -13,7 +13,7 @@ import {
   getIndicatorRSI
 } from "../thunks/symbols";
 
-function PlotArea() {
+function PlotArea({ w }) {
   const [data, setData] = useState(null);
   const [displayMACD, setDisplayMACD] = useState(false);
   const [displayRSI, setDisplayRSI] = useState(false);
@@ -105,13 +105,15 @@ function PlotArea() {
 
   return (
     <div>
-      <Dropdown />
-      <p>Profit {simulateTrade.profit}</p>
-      <p> Ntrades {simulateTrade.buyTimes.length}</p>
+      <div style={{ textAlign: "center" }}>
+        <Dropdown />
+      </div>
+
       <CandleStickStockScaleChart
         data={data}
         macd={displayMACD}
         rsi={displayRSI}
+        width={w}
       />
     </div>
   );

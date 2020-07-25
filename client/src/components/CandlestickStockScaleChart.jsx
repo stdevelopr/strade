@@ -22,6 +22,7 @@ import {
   OHLCTooltip,
   MovingAverageTooltip,
   RSITooltip,
+  MACDTooltip,
   SingleValueTooltip
 } from "react-stockcharts/lib/tooltip";
 
@@ -42,6 +43,15 @@ const macdAppearance = {
   fill: {
     divergence: "#4682B4"
   }
+};
+
+const mouseEdgeAppearance = {
+  textFill: "#542605",
+  stroke: "#05233B",
+  strokeOpacity: 1,
+  strokeWidth: 3,
+  arrowWidth: 5,
+  fill: "#BCDEFA"
 };
 
 class CandleStickStockScaleChart extends React.Component {
@@ -82,7 +92,7 @@ class CandleStickStockScaleChart extends React.Component {
 
     return (
       <ChartCanvas
-        height={700}
+        height={800}
         ratio={ratio}
         width={width}
         margin={{ left: 80, right: 80, top: 30, bottom: 30 }}
@@ -98,7 +108,7 @@ class CandleStickStockScaleChart extends React.Component {
           id={1}
           yExtents={d => [d.high, d.low]}
           padding={{ top: 10, bottom: 10 }}
-          height={400}
+          height={520}
         >
           <XAxis axisAt="bottom" orient="bottom" ticks={6} />
           <YAxis axisAt="left" orient="left" ticks={5} />
@@ -132,12 +142,28 @@ class CandleStickStockScaleChart extends React.Component {
           <Chart
             id={2}
             yExtents={d => d.macd}
-            origin={(w, h) => [0, h - 300]}
+            origin={(w, h) => [0, h - 200]}
             padding={{ top: 20, bottom: 10 }}
-            height={150}
+            height={100}
           >
             <XAxis axisAt="bottom" orient="bottom" />
-            <YAxis axisAt="right" orient="right" ticks={2} />
+            <YAxis axisAt="left" orient="left" ticks={2} />
+            <MouseCoordinateY
+              at="left"
+              orient="left"
+              displayFormat={format(".4f")}
+              {...mouseEdgeAppearance}
+            />
+            <MACDTooltip
+              origin={[-38, 15]}
+              yAccessor={d => d.macd}
+              options={{
+                fast: 12,
+                slow: 26,
+                signal: 9
+              }}
+              appearance={macdAppearance}
+            />
             <MACDSeries yAccessor={d => d.macd} {...macdAppearance} />
           </Chart>
         )}
@@ -145,8 +171,8 @@ class CandleStickStockScaleChart extends React.Component {
           <Chart
             id={3}
             yExtents={[0, 100]}
-            height={125}
-            origin={(w, h) => [0, h - 125]}
+            height={100}
+            origin={(w, h) => [0, h - 100]}
           >
             <XAxis
               axisAt="bottom"
@@ -154,11 +180,11 @@ class CandleStickStockScaleChart extends React.Component {
               showTicks={false}
               outerTickSize={0}
             />
-            <YAxis axisAt="right" orient="right" tickValues={[30, 50, 70]} />
+            <YAxis axisAt="left" orient="left" tickValues={[30, 50, 70]} />
             <MouseCoordinateY
-              at="right"
-              orient="right"
-              displayFormat={format(".2f")}
+              at="left"
+              orient="left"
+              displayFormat={format(".4f")}
             />
 
             <RSISeries yAccessor={d => d.rsi} />

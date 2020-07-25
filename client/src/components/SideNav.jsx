@@ -21,19 +21,50 @@ const Sidenav = () => {
       dispatch(setOpenSideNavMenu(true));
     }
   };
+
+  const setSelectedStyle = context =>
+    menuContext == context && openMenu == true ? styles.selected : {};
+
   return (
-    <div style={styles}>
-      <p onClick={() => setContext("indicators")}>Indic.</p>
-      <p onClick={() => setContext("simulateTrade")}>Simul.</p>
+    <div style={styles.bar}>
+      <div style={styles.content}>
+        <p
+          onClick={() => setContext("indicators")}
+          style={setSelectedStyle("indicators")}
+        >
+          Indic.
+        </p>
+        <p
+          onClick={() => setContext("simulateTrade")}
+          style={setSelectedStyle("simulateTrade")}
+        >
+          Simul.
+        </p>
+        <p
+          onClick={() => setContext("huntPairs")}
+          style={setSelectedStyle("huntPairs")}
+        >
+          Hunt.
+        </p>
+      </div>
     </div>
   );
 };
 
 const styles = {
-  background: "#272c36",
-  position: "fixed",
-  width: "50px",
-  color: "white",
-  height: "100vh"
+  bar: {
+    background: "#272c36",
+    position: "fixed",
+    width: "50px",
+    color: "white",
+    height: "100vh"
+  },
+  content: {
+    marginTop: "100px",
+    textAlign: "center"
+  },
+  selected: {
+    background: "red"
+  }
 };
 export default Sidenav;

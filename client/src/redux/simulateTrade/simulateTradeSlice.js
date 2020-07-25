@@ -12,7 +12,7 @@ const simulateTradeSlice = createSlice({
     error: "",
     buyTimes: [],
     sellTimes: [],
-    profit: ""
+    profit: 0
   },
   reducers: {},
   extraReducers: {

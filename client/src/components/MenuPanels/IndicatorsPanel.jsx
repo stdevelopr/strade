@@ -13,6 +13,7 @@ const IndicatorsPanel = () => {
   const symbol = useSelector(state => state.symbols.contextSymbol);
   return (
     <div style={styles}>
+      <h3>Indicators</h3>
       <button onClick={() => dispatch(getIndicatorRSI(symbol))}>
         Plot RSI
       </button>
@@ -24,6 +25,7 @@ const IndicatorsPanel = () => {
 };
 
 const styles = {
-  display: "grid"
+  display: "grid",
+  margin: "20px"
 };
 export default IndicatorsPanel;
