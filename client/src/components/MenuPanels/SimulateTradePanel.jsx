@@ -5,7 +5,8 @@ import { useSelector, useDispatch } from "react-redux";
 import {
   simulateTradeThunk,
   simulateTradeMACDCrossThunk,
-  simulateTradeRSIThunk
+  simulateTradeRSIThunk,
+  forecast
 } from "../../thunks/simulateTrade";
 
 const SimulateTradePanel = () => {
@@ -29,6 +30,8 @@ const SimulateTradePanel = () => {
       <button onClick={() => dispatch(simulateTradeRSIThunk(symbol))}>
         Simulate RSI Trade
       </button>
+      <br></br>
+      <button onClick={() => dispatch(forecast(symbol))}>Forecast</button>
     </div>
   );
 };

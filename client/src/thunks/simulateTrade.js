@@ -40,6 +40,17 @@ export const simulateTradeRSIThunk = createAsyncThunk(
   }
 );
 
+export const forecast = createAsyncThunk(
+  "/prophet",
+  async (symbol, thunkAPI) => {
+    let resp = {};
+    await axios.get("api/binance/prophet/" + symbol).then(res => {
+      console.log("DATA", res.data);
+    });
+    return resp;
+  }
+);
+
 // const simulateMACDCrossTrade = () => {
 //   axios.get("api/binance/simulate/macd_cross/" + symbol).then(res => {
 //     setLongShort(res.data["data"]["buy"], res.data["data"]["sell"]);
