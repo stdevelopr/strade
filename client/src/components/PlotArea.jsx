@@ -106,7 +106,7 @@ function PlotArea({ w }) {
 
   return (
     <div>
-      <div style={{ textAlign: "center" }}>
+      <div style={{ display: "flex" }}>
         <DropdownSymbols />
         <DropdownTimeFrames />
       </div>

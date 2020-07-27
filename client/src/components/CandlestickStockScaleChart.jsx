@@ -30,6 +30,7 @@ import {
   CandlestickSeries,
   MACDSeries,
   RSISeries,
+  BarSeries,
   LineSeries
 } from "react-stockcharts/lib/series";
 
@@ -137,10 +138,27 @@ class CandleStickStockScaleChart extends React.Component {
             displayFormat={format(".4s")}
           />
         </Chart>
+        <Chart
+          id={2}
+          origin={(w, h) => [0, h - 200]}
+          height={75}
+          yExtents={d => d.volume}
+        >
+          <YAxis
+            axisAt="left"
+            orient="left"
+            ticks={5}
+            tickFormat={format(".2s")}
+          />
+          <BarSeries
+            yAccessor={d => d.volume}
+            fill={d => (d.close > d.open ? "#6BA583" : "red")}
+          />
+        </Chart>
         <CrossHairCursor />
         {this.props.macd && (
           <Chart
-            id={2}
+            id={3}
             yExtents={d => d.macd}
             origin={(w, h) => [0, h - 200]}
             padding={{ top: 20, bottom: 10 }}
@@ -169,7 +187,7 @@ class CandleStickStockScaleChart extends React.Component {
         )}
         {this.props.rsi && (
           <Chart
-            id={3}
+            id={4}
             yExtents={[0, 100]}
             height={100}
             origin={(w, h) => [0, h - 100]}
