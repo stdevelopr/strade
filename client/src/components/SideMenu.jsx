@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from "react-redux";
 import IndicatorsPanel from "./MenuPanels/IndicatorsPanel";
 import SimulateTradePanel from "./MenuPanels/SimulateTradePanel";
 import HuntPairsPanel from "./MenuPanels/HuntPairsPanel";
+import RealTimePanel from "./MenuPanels/RealTimePanel";
 
 const SideMenu = () => {
   const open = useSelector(state => state.pageContext.openSideNavMenu);
@@ -24,6 +25,7 @@ const SideMenu = () => {
         {context == "indicators" && <IndicatorsPanel />}
         {context == "simulateTrade" && <SimulateTradePanel />}
         {context == "huntPairs" && <HuntPairsPanel />}
+        {context == "realTime" && <RealTimePanel />}
       </div>
     </div>
   );

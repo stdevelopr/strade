@@ -29,6 +29,12 @@ const Sidenav = () => {
     <div style={styles.bar}>
       <div style={styles.content}>
         <p
+          onClick={() => setContext("realTime")}
+          style={setSelectedStyle("realTime")}
+        >
+          RealTim.
+        </p>
+        <p
           onClick={() => setContext("indicators")}
           style={setSelectedStyle("indicators")}
         >

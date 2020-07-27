@@ -76,3 +76,29 @@ export const getIndicatorRSI = createAsyncThunk(
     return response;
   }
 );
+
+export const realTimeConn = createAsyncThunk(
+  "realTime/connect",
+  async (symbol, APIThunk) => {
+    let response;
+    await axios
+      .get(
+        "api/binance/realtime/connect/" + symbol.symbol + "/" + symbol.timeframe
+      )
+      .then(res => JSON.parse(res.data.replace(/\bNaN\b/g, "null")))
+      .then(data => (response = data["data"]));
+    return response;
+  }
+);
+
+export const realTimeConnStop = createAsyncThunk(
+  "realTime/stop",
+  async (symbol, APIThunk) => {
+    let response;
+    await axios
+      .get("api/binance/realtime/stop")
+      .then(res => JSON.parse(res.data.replace(/\bNaN\b/g, "null")))
+      .then(data => (response = data["data"]));
+    return response;
+  }
+);
