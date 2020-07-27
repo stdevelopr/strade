@@ -6,7 +6,9 @@ import { huntMACD } from "../../thunks/huntPairs";
 
 const HuntPairsPanel = () => {
   const dispatch = useDispatch();
-  const symbol = useSelector(state => state.symbols.contextSymbol);
+  const timeframe = useSelector(
+    state => state.symbols.timeframes.contextTimeFrame
+  );
   const pairsInfo = useSelector(state => state.huntPairs.all);
 
   useEffect(() => {
@@ -15,7 +17,7 @@ const HuntPairsPanel = () => {
   return (
     <div style={styles}>
       <h3>Hunt</h3>
-      <button onClick={() => dispatch(huntMACD())}>Refresh</button>
+      <button onClick={() => dispatch(huntMACD(timeframe))}>Refresh</button>
       {pairsInfo.map(item => {
         return (
           <div>
