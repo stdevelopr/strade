@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import CandleStickStockScaleChart from "./CandlestickStockScaleChart";
 import { useSelector, useDispatch } from "react-redux";
-import Dropdown from "./DropdownSymbols";
+import DropdownSymbols from "./DropdownSymbols";
+import DropdownTimeFrames from "./DropdownTimeFrames";
+
 import {
   simulateTradeThunk,
   simulateTradeMACDCrossThunk,
@@ -20,6 +22,9 @@ function PlotArea({ w }) {
 
   const dispatch = useDispatch();
   const symbol = useSelector(state => state.symbols.contextSymbol);
+  const timeframe = useSelector(
+    state => state.symbols.timeframes.contextTimeFrame
+  );
   const simulateTrade = useSelector(state => state.simulateTrade);
   const symbolData = useSelector(state => state.symbols.symbolData);
   const indicatorMACD = useSelector(state => state.symbols.indicatorMACD);
@@ -31,8 +36,8 @@ function PlotArea({ w }) {
   }, [simulateTrade]);
 
   useEffect(() => {
-    dispatch(getSymbolData(symbol));
-  }, [symbol]);
+    dispatch(getSymbolData({ symbol: symbol, timeframe: timeframe }));
+  }, [symbol, timeframe]);
 
   useEffect(() => {
     setData(symbolData);
@@ -106,7 +111,8 @@ function PlotArea({ w }) {
   return (
     <div>
       <div style={{ textAlign: "center" }}>
-        <Dropdown />
+        <DropdownSymbols />
+        <DropdownTimeFrames />
       </div>
 
       <CandleStickStockScaleChart
