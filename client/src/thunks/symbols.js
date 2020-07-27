@@ -47,7 +47,9 @@ export const getIndicatorMACD = createAsyncThunk(
   async (symbol, APIThunk) => {
     let response;
     await axios
-      .get("api/binance/indicator/macd/" + symbol)
+      .get(
+        "api/binance/indicator/macd/" + symbol.symbol + "/" + symbol.timeframe
+      )
       .then(res => JSON.parse(res.data.replace(/\bNaN\b/g, "null")))
       .then(
         data =>
@@ -66,7 +68,9 @@ export const getIndicatorRSI = createAsyncThunk(
   async (symbol, APIThunk) => {
     let response;
     await axios
-      .get("api/binance/indicator/rsi/" + symbol)
+      .get(
+        "api/binance/indicator/rsi/" + symbol.symbol + "/" + symbol.timeframe
+      )
       .then(res => JSON.parse(res.data.replace(/\bNaN\b/g, "null")))
       .then(data => (response = data["data"]));
     return response;

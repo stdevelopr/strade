@@ -50,19 +50,3 @@ export const forecast = createAsyncThunk(
     return resp;
   }
 );
-
-// const simulateMACDCrossTrade = () => {
-//   axios.get("api/binance/simulate/macd_cross/" + symbol).then(res => {
-//     setLongShort(res.data["data"]["buy"], res.data["data"]["sell"]);
-//     setProfit(res.data["data"]["profit"]);
-//     setNtrades(res.data["data"]["buy"].length);
-//   });
-// };
-
-// const simulateRSITrade = () => {
-//   axios.get("api/binance/simulate/rsi/" + symbol).then(res => {
-//     setLongShort(res.data["data"]["buy"], res.data["data"]["sell"]);
-//     setProfit(res.data["data"]["profit"]);
-//     setNtrades(res.data["data"]["buy"].length);
-//   });
-// };

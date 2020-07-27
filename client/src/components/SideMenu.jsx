@@ -4,16 +4,6 @@ import { useSelector, useDispatch } from "react-redux";
 import IndicatorsPanel from "./MenuPanels/IndicatorsPanel";
 import SimulateTradePanel from "./MenuPanels/SimulateTradePanel";
 import HuntPairsPanel from "./MenuPanels/HuntPairsPanel";
-import {
-  simulateTradeThunk,
-  simulateTradeMACDCrossThunk,
-  simulateTradeRSIThunk
-} from "../thunks/simulateTrade";
-import {
-  getSymbolData,
-  getIndicatorMACD,
-  getIndicatorRSI
-} from "../thunks/symbols";
 
 const SideMenu = () => {
   const open = useSelector(state => state.pageContext.openSideNavMenu);

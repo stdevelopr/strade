@@ -9,11 +9,7 @@ import {
   simulateTradeMACDCrossThunk,
   simulateTradeRSIThunk
 } from "../thunks/simulateTrade";
-import {
-  getSymbolData,
-  getIndicatorMACD,
-  getIndicatorRSI
-} from "../thunks/symbols";
+import { getSymbolData } from "../thunks/symbols";
 
 function PlotArea({ w }) {
   const [data, setData] = useState(null);
