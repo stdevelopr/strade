@@ -12,6 +12,9 @@ import {
 const SimulateTradePanel = () => {
   const dispatch = useDispatch();
   const symbol = useSelector(state => state.symbols.contextSymbol);
+  const timeframe = useSelector(
+    state => state.symbols.timeframes.contextTimeFrame
+  );
   const simulateTrade = useSelector(state => state.simulateTrade);
   return (
     <div>
@@ -21,17 +24,42 @@ const SimulateTradePanel = () => {
       <p>{simulateTrade.profit}</p>
       <p> Ntrades</p>
       <p>{simulateTrade.buyTimes.length}</p>
-      <button onClick={() => dispatch(simulateTradeThunk(symbol))}>
+      <button
+        onClick={() =>
+          dispatch(simulateTradeThunk({ symbol: symbol, timeframe: timeframe }))
+        }
+      >
         Simulate MACD Trade
       </button>
-      <button onClick={() => dispatch(simulateTradeMACDCrossThunk(symbol))}>
+      <button
+        onClick={() =>
+          dispatch(
+            simulateTradeMACDCrossThunk({
+              symbol: symbol,
+              timeframe: timeframe
+            })
+          )
+        }
+      >
         Simulate MACD Cross Trade
       </button>
-      <button onClick={() => dispatch(simulateTradeRSIThunk(symbol))}>
+      <button
+        onClick={() =>
+          dispatch(
+            simulateTradeRSIThunk({ symbol: symbol, timeframe: timeframe })
+          )
+        }
+      >
         Simulate RSI Trade
       </button>
       <br></br>
-      <button onClick={() => dispatch(forecast(symbol))}>Forecast</button>
+      <button
+        onClick={() =>
+          dispatch(forecast({ symbol: symbol, timeframe: timeframe }))
+        }
+      >
+        Forecast
+      </button>
     </div>
   );
 };
