@@ -5,6 +5,7 @@ import IndicatorsPanel from "./MenuPanels/IndicatorsPanel";
 import SimulateTradePanel from "./MenuPanels/SimulateTradePanel";
 import HuntPairsPanel from "./MenuPanels/HuntPairsPanel";
 import RealTimePanel from "./MenuPanels/RealTimePanel";
+import AIPanel from "./MenuPanels/AIPanel";
 
 const SideMenu = () => {
   const open = useSelector(state => state.pageContext.openSideNavMenu);
@@ -26,6 +27,7 @@ const SideMenu = () => {
         {context == "simulateTrade" && <SimulateTradePanel />}
         {context == "huntPairs" && <HuntPairsPanel />}
         {context == "realTime" && <RealTimePanel />}
+        {context == "AI" && <AIPanel />}
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import { simulateTradeReducer } from "./simulateTrade/simulateTradeSlice";
 import { pageContextReducer } from "./pageContext/pageContextSlice";
 import { menuContextReducer } from "./menuContext/menuContextSlice";
 import { huntPairsReducer } from "./huntPairs/huntPairsSlice";
+import { AIReducer } from "./AI/AISlice";
 
 // import { combineReducers } from "redux";
 
@@ -13,7 +14,8 @@ const rootReducer = {
   symbols: symbolsReducer,
   pageContext: pageContextReducer,
   menuContext: menuContextReducer,
-  huntPairs: huntPairsReducer
+  huntPairs: huntPairsReducer,
+  AI: AIReducer
 };
 const store = configureStore({ reducer: rootReducer });
 

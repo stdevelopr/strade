@@ -22,14 +22,23 @@ function PlotArea({ w }) {
     state => state.symbols.timeframes.contextTimeFrame
   );
   const simulateTrade = useSelector(state => state.simulateTrade);
+  const AIExtrema = useSelector(state => state.AI.extrema);
   const symbolData = useSelector(state => state.symbols.symbolData);
   const indicatorMACD = useSelector(state => state.symbols.indicatorMACD);
   const symbolIndicatorRSI = useSelector(state => state.symbols.indicatorRSI);
+
+  console.log(AIExtrema);
 
   useEffect(() => {
     if (data && simulateTrade.buyTimes.length != 0)
       setLongShort(simulateTrade.buyTimes, simulateTrade.sellTimes);
   }, [simulateTrade]);
+
+  useEffect(() => {
+    if (data && AIExtrema) {
+      setLongShort(AIExtrema.min, AIExtrema.max);
+    }
+  }, [AIExtrema]);
 
   useEffect(() => {
     dispatch(getSymbolData({ symbol: symbol, timeframe: timeframe }));

@@ -52,6 +52,9 @@ const Sidenav = () => {
         >
           Hunt.
         </p>
+        <p onClick={() => setContext("AI")} style={setSelectedStyle("AI")}>
+          AI.
+        </p>
       </div>
     </div>
   );

@@ -108,7 +108,7 @@ class CandleStickStockScaleChart extends React.Component {
         <Chart
           id={1}
           yExtents={d => [d.high, d.low]}
-          padding={{ top: 10, bottom: 10 }}
+          padding={{ top: 50, bottom: 50 }}
           height={520}
         >
           <XAxis axisAt="bottom" orient="bottom" ticks={6} />
@@ -140,7 +140,7 @@ class CandleStickStockScaleChart extends React.Component {
         </Chart>
         <Chart
           id={2}
-          origin={(w, h) => [0, h - 200]}
+          origin={(w, h) => [0, h - 150]}
           height={75}
           yExtents={d => d.volume}
         >
