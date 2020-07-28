@@ -1,6 +1,10 @@
 from flask import Blueprint, jsonify
-from .connect import binance_connect, parse_binance_response
-from .db import process_ma,save_symbol_data_to_mongo, process_macd, get_all_symbols_names, get_symbol_data
+from .remote_op import binance_connect, socket_connect, socket_stop
+from .db_op import process_ma,save_symbol_data_to_mongo, process_macd, get_all_symbols_names, get_symbol_data,  get_symbol_indicator
+from .hunting import hunt_macd
+from .trading import simulate_macd_trade, simulate_macd_trade_crossover, simulate_rsi_trade
+from .prophet_forecast import forecast_data
+from .AI import calculate_extrema
 import json
 from api.app.extensions import mongo_client
 
@@ -13,6 +17,9 @@ def index():
     r = binance_connect()
     return jsonify(r)
 
+
+#SYMBOLS #########################################################
+
 @binance_bp.route('/all_symbols')
 def all_pairs():
     """ Fetch and return a list with all symbols """
@@ -22,101 +29,121 @@ def all_pairs():
     except:
         return jsonify("error"),500
 
-@binance_bp.route('/extract/<symbol>')
-def extract_symbol(symbol):
+@binance_bp.route('/all_timeframes')
+def all_timeframes():
+    """ Return a list with all timeframes """
+    
+    return jsonify({"timeframes": ["30m", "4h", "1d"]})
+
+@binance_bp.route('/get/<symbol>/<timeframe>')
+def get_symbol(symbol, timeframe):
     """ Returns data for a specific symbol """
 
-    ot,o,l,h,c,v,ct,nots,tbv,tqv = get_symbol_data(symbol)
-    # save_symbol_data_to_mongo(symbol,ot,o,l,h,c,v,ct,nots,tbv,tqv)
-    return jsonify({"o":o, "h":h, "l":l, "c":c, "ot":ot, "v":v, "ct":ct})
+    return jsonify(get_symbol_data(symbol, timeframe))
+
+################################################################
 
 
-@binance_bp.route('/plot/<symbol>')
-def candlestick_route(symbol):
-    """ Fetch data and plot it for a specific symbol"""
+# INDICATORS############################################################
 
-    ot,o,l,h,c,v,ct,nots,tbv,tqv = parse_binance_response(symbol)
-
-    import plotly.graph_objects as go
-    from datetime import datetime
-    import plotly.express as px
-    fig = go.Figure()
-
-    fig.add_trace(go.Candlestick(x=ot,
-                    open=o,
-                    high=h,
-                    low=l,
-                    close=c))
-
-    # ma = calculate_ma(symbol)
-    # fig.add_trace(
-    # go.Scatter(
-    #     x=ot,
-    #     y=ma[0]
-    # ))
-
-    fig.show()
-    return "OK"
-
-@binance_bp.route('/process_ma/<symbol>')
-def calculate_ma_route(symbol):
-    """Calculate the MA for a symbol and save it to database"""
-
-    r = process_ma(symbol)
-    return jsonify({"ma": str(r)})
-
-@binance_bp.route('/process_macd/<symbol>')
-def calculate_macd_route(symbol):
-    """Calculate the MACD for a symbol and save it to database"""
-    r = process_macd(symbol)
-    return jsonify({"macd": str(r)})
-
-@binance_bp.route('/trade/<symbol>')
-def trade(symbol):
-    from datetime import datetime
-    data = mongo.db["BINANCE"].find_one({"symbol":symbol}, {"_id":0, "open_time":1, "MACD":1, "close": 1})
-    ot = data["open_time"]
+@binance_bp.route('/indicator/macd/<symbol>/<timeframe>')
+def calculate_macd_route(symbol, timeframe):
+    """Calculate the MACD for a symbol and return it"""
+    
+    data = get_symbol_indicator(symbol, "MACD", timeframe)
+    macd = data['indicators']['MACD']['MACD']
+    signal = data['indicators']['MACD']['MACDSIG']
+    histogram = data['indicators']['MACD']['MACDHIST']
+    return jsonify({"macd": macd, "signal": signal, "histogram": histogram})
 
 
-    dt = [datetime.fromtimestamp(int(val)/1000) for val in ot]
+@binance_bp.route('/indicator/rsi/<symbol>/<timeframe>')
+def get_rsi_route(symbol,timeframe):
+    data = get_symbol_indicator(symbol, "RSI", timeframe)
+    rsi = data["indicators"]["RSI"]
 
-    macd = data["MACD"]
-    close = data["close"]
-    stop = False
-    profit = []
-    buy = []
-    sell = []
-    buy_sign = False
-    for i in range(len(macd)):
-        if i!=0 and i!=len(macd)-1:
-            if macd[i] <= 0 and macd[i+1] >0:
-                # buy
-                buy.append(close[i])
-                buy_sign = True
-                buy_val = close[i]
-                print("BUY", dt[i], close[i])
-            elif macd[i] >= 0 and macd[i+1] <0 and buy_sign==True:
-                sell.append(close[i])
-                profit.append(close[i] - buy_val)
-                buy_sign = False
-                print("SELL", dt[i], close[i])
+    return jsonify({"SYMBOL": symbol, "data": rsi})
 
-    # print(sum(profit))
-    profit_sum = sum(profit)
-
-    # import plotly.graph_objects as go
-    # from datetime import datetime
-    # import plotly.express as px
-    # fig = go.Figure()
-
-    # fig.add_trace(
-    # go.Scatter(
-    #     x=dt,
-    #     y=macd
-    # ))
+##################################################################
 
 
-    # fig.show()
+
+# SIMULATE TRADE #########################################################
+
+@binance_bp.route('/simulate/macd_cross/<symbol>/<timeframe>')
+def simulate_macd_crossover(symbol, timeframe):
+
+    profit = simulate_macd_trade_crossover(symbol, timeframe)
+
+    return jsonify({"SYMBOL": symbol, "data": profit})
 
 
-    return jsonify({"SYMBOL": symbol, "profit": profit_sum})
+@binance_bp.route('simulate/rsi/<symbol>/<timeframe>')
+def simulate_rsi(symbol, timeframe):
+
+    profit = simulate_rsi_trade(symbol, timeframe)
+
+    return jsonify({"SYMBOL": symbol, "data": profit})
+
+
+@binance_bp.route('/simulate/macd_simple/<symbol>/<timeframe>')
+def simulate_macd_simple(symbol, timeframe):
+
+    profit = simulate_macd_trade(symbol, timeframe)
+
+    return jsonify({"SYMBOL": symbol, "data": profit})
+    
+#################################################################
+
+
+# HUNTING PAIRS ###############################################
+@binance_bp.route('/hunt/macd/<timeframe>')
+def hunting_macd(timeframe):
+    pairs_info = hunt_macd(timeframe)
+
+    return jsonify({"pairs_info": pairs_info})
+
+
+
+
+####################################################
+
+
+# PROPHET #################################
+@binance_bp.route('/prophet/<symbol>')
+def prophet_forecast(symbol):
+    data = get_symbol_data(symbol)
+    before, future, last_date, forecast = forecast_data(symbol, 1)
+    before = before['y'].values[0]
+    last_date = last_date['y'].values[0]
+    print("GREATER", last_date > before)
+    print('FORECAST GREATER', list(forecast['yhat'].values())[0] > before)
+
+    return jsonify({"forecast": forecast})
+
+#############################################
+
+# Real Time ######################
+@binance_bp.route('/realtime/connect/<symbol>/<timeframe>')
+def real_time(symbol, timeframe):
+    print("Connect")
+    socket_connect()
+
+    return jsonify("OK")
+
+@binance_bp.route('/realtime/stop')
+def real_time_stop():
+    print("Stop")
+    socket_stop()
+
+    return jsonify("OK")
+
+#############################################
+
+
+# AI ###########################################
+@binance_bp.route('/ai/calculate_extrema//<symbol>/<timeframe>')
+def ai_extrema(symbol, timeframe):
+    result = calculate_extrema(symbol, timeframe)
+    return jsonify(result)
+

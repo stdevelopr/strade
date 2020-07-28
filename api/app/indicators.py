@@ -73,3 +73,8 @@ def MACD(close):
 
     macd, macdsignal, macdhist = talib.MACD(np.asarray(close), fastperiod=12, slowperiod=26, signalperiod=9)
     return macd, macdsignal, macdhist
+
+def RSI(close):
+    """ Relative Strength Index """
+    real = talib.RSI(np.asarray(close), timeperiod=14)
+    return real
