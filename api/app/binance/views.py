@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, current_app
 from .remote_op import binance_connect, socket_connect, socket_stop
 from .db_op import process_ma,save_symbol_data_to_mongo, process_macd, get_all_symbols_names, get_symbol_data,  get_symbol_indicator
 from .hunting import hunt_macd
@@ -6,10 +6,13 @@ from .trading import simulate_macd_trade, simulate_macd_trade_crossover, simulat
 from .prophet_forecast import forecast_data
 from .AI import calculate_extrema
 import json
-from api.app.extensions import mongo_client
+from api.app.extensions import mongo_client, socketio
+from .io_blueprint import IOBlueprint
 
+from .events import handle_message
 
 binance_bp = Blueprint('binance', __name__, url_prefix='/api/binance')
+socket = IOBlueprint('binance', __name__)
 
 @binance_bp.route('/')
 def index():
@@ -146,4 +149,10 @@ def real_time_stop():
 def ai_extrema(symbol, timeframe):
     result = calculate_extrema(symbol, timeframe)
     return jsonify(result)
+
+
+
+#######################################
+
+
 

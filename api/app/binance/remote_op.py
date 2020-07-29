@@ -1,6 +1,7 @@
 import requests
 from binance.client import Client
 from binance.websockets import BinanceSocketManager
+from flask_socketio import emit
 import os
 
 api_key = os.environ.get("API_KEY")
