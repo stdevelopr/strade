@@ -26,9 +26,13 @@ client = Client(api_key, api_secret)
 
 
 bm = BinanceSocketManager(client)
+actual_prices = []
+loop_event = [False]
 
 
 def socket_connect():
+    loop_event.clear()
+    loop_event.append(True)
     # start any sockets here, i.e a trade socket
     global conn_key
     conn_key = bm.start_trade_socket('BNBBTC', process_message)
@@ -36,13 +40,15 @@ def socket_connect():
     bm.start()
 
 def socket_stop():
+    loop_event.clear()
+    loop_event.append(False)
     bm.stop_socket(conn_key)
 
 
 def process_message(msg):
-    print("message type: {}".format(msg['e']))
-    print(msg)
-    # do something
+    actual_prices.append(msg)
+    if len(actual_prices) > 5:
+        actual_prices.clear()
 
 def binance_connect() -> object:
     """ Return the exchange info """

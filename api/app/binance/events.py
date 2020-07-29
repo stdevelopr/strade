@@ -11,6 +11,7 @@ from flask import request
 from flask_socketio import emit, ConnectionRefusedError, disconnect
 
 from .io_blueprint import IOBlueprint
+from .remote_op import actual_prices, loop_event
 
 logger = logging.getLogger(__name__)
 bp = IOBlueprint('events', __name__)
@@ -59,8 +60,19 @@ def connect():
 def disconnect():
     print("Disconnected")
 
-@bp.on('teste')
+@bp.on('real_time')
 def handle_message():
-    print("Evento teste")
-    emit('receive', "ALO")
+    print("Evento teste", loop_event, id(loop_event))
+    while loop_event[0]:
+        time.sleep(0.1)
+        try:
+            if len(actual_prices) >= 1:
+                print(len(actual_prices))
+                print(actual_prices[-1])
+                emit("real_time", actual_prices[-1])
+                actual_prices.pop()
+                print("N",len(actual_prices))
+        except:
+            pass
+
     return "from API"

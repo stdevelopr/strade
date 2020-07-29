@@ -22,16 +22,13 @@ const RealTimePanel = () => {
   );
 
   const [response, setResponse] = useState("");
-
+  console.log(response);
   useEffect(() => {
     socket.on("connect", () => {
       console.log("connected");
     });
-    socket.emit("teste", data => {
-      console.log("message", data);
-    });
-    socket.on("receive", data => {
-      console.log("received", data);
+    socket.on("real_time", data => {
+      setResponse(data["p"]);
     });
   }, []);
 
@@ -40,6 +37,7 @@ const RealTimePanel = () => {
   return (
     <div style={styles}>
       <h3>Connect</h3>
+      {response}
       <button
         onClick={() =>
           dispatch(realTimeConn({ symbol: symbol, timeframe: timeframe }))
@@ -50,7 +48,9 @@ const RealTimePanel = () => {
       <button onClick={() => dispatch(realTimeConnStop())}>
         Stop Connection
       </button>
-      <button onClick={() => socket.close()}>close socket</button>
+
+      <button onClick={() => socket.emit("real_time")}>Real Time Prices</button>
+      <button onClick={() => socket.close()}>Stop connection</button>
     </div>
   );
 };
