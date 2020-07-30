@@ -4,7 +4,7 @@ from .db_op import process_ma,save_symbol_data_to_mongo, process_macd, get_all_s
 from .hunting import hunt_macd
 from .trading import simulate_macd_trade, simulate_macd_trade_crossover, simulate_rsi_trade
 from .prophet_forecast import forecast_data
-from .AI import calculate_extrema
+from .AI import calculate_extrema, prepare_data
 import json
 from api.app.extensions import mongo_client, socketio
 from .io_blueprint import IOBlueprint
@@ -149,6 +149,12 @@ def real_time_stop():
 def ai_extrema(symbol, timeframe):
     result = calculate_extrema(symbol, timeframe)
     return jsonify(result)
+
+@binance_bp.route('/ai/prepare_data/<symbol>/<timeframe>')
+def prepare_data_route(symbol, timeframe):
+    result = prepare_data(symbol, timeframe)
+    return jsonify("OK")
+
 
 
 

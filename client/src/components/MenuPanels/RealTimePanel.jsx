@@ -24,12 +24,12 @@ const RealTimePanel = () => {
   const [response, setResponse] = useState("");
   console.log(response);
   useEffect(() => {
-    socket.on("connect", () => {
-      console.log("connected");
-    });
-    socket.on("real_time", data => {
-      setResponse(data["p"]);
-    });
+    // socket.on("connect", () => {
+    //   console.log("connected");
+    // });
+    // socket.on("real_time", data => {
+    //   setResponse(data["p"]);
+    // });
   }, []);
 
   // if (socket) console.log(socket);

@@ -25,6 +25,15 @@ const AIPanel = () => {
       >
         Calulate extrema
       </button>
+      <button
+        onClick={() =>
+          fetch("api/binance/ai/prepare_data/" + symbol + "/" + timeframe).then(
+            response => console.log(response)
+          )
+        }
+      >
+        Prepare Data
+      </button>
     </div>
   );
 };
