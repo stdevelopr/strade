@@ -8,6 +8,9 @@ from sklearn import preprocessing
 from collections import deque
 import random
 
+from keras import models
+from keras import layers, optimizers
+
 # basead on the last 60 candles
 SEQ_LEN = 10
 
@@ -75,7 +78,49 @@ def preprocess_df(df):
         X.append(seq)
         y.append(target)
 
-    return np.array(X), y
+    return np.array(X), np.array(y)
+
+def load_model():
+    # load json and create model
+    json_file = open('model.json', 'r')
+    loaded_model_json = json_file.read()
+    json_file.close()
+    loaded_model = models.model_from_json(loaded_model_json)
+    # load weights into new model
+    loaded_model.load_weights("model.h5")
+    print("Loaded model from disk")
+
+    return loaded_model
+
+
+def apply_model(network, train_images, train_labels, test_images, test_labels):
+
+    network.fit(train_images, train_labels, epochs=5, batch_size=64)
+
+    # # serialize model to JSON
+    # model_json = network.to_json()
+    # with open("model.json", "w") as json_file:
+    #     json_file.write(model_json)
+    # # serialize weights to HDF5
+    # network.save_weights("model.h5")
+    # print("Saved model to disk")
+
+    # test_loss, test_acc = network.evaluate(test_images, test_labels)
+
+    # predictions = network.predict([test_images])
+    # print(np.argmax(predictions[0]))
+    return 1,2
+
+def buid_model(input_shape):
+    network = models.Sequential()
+    network.add(layers.LSTM(128, input_shape=input_shape, return_sequences=True))
+    network.add(layers.Dense(32, activation='relu'))
+    network.add(layers.Dense(2, activation='softmax'))
+    
+    opt = optimizers.Adam(lr=0.001, decay=1e-6)
+    network.compile(optimizer=opt, loss='sparse_categorical_crossentropy', metrics='accuracy')
+
+    return network
 
 def prepare_data(symbol, timeframe):
     data = get_symbol_data(symbol, timeframe)
@@ -93,7 +138,6 @@ def prepare_data(symbol, timeframe):
     
     df.set_index('time', inplace=True)
 
-    # assure that the time is in order and split it
     times = sorted(df.index.values)
     back_slice = int(0.05*len(times))
     last_5pct = times[-back_slice]
@@ -103,9 +147,38 @@ def prepare_data(symbol, timeframe):
     validation_x, validation_y = preprocess_df(validation_df)
     train_x, train_y = preprocess_df(df)
 
-    print(f"train data size: {len(train_x)}, validation size: {len(validation_x)}")
-    print(f"Dont buys: {train_y.count(0)}, buys: {train_y.count(1)}")
-    print(f"Validation dont buys: {validation_y.count(0)}, buys: {validation_y.count(1)}")
+    return train_x, train_y, validation_x, validation_y
+
+    # print(f"train data size: {len(train_x)}, validation size: {len(validation_x)}")
+    # print(f"Dont buys: {train_y.count(0)}, buys: {train_y.count(1)}")
+    # print(f"Validation dont buys: {validation_y.count(0)}, buys: {validation_y.count(1)}")
+
+
+
+    # model = buid_model()
+    # network, test_loss, test_acc = apply_model(model)
+    # print('test_acc:', test_acc, 'test_loss', test_loss)
+
+    # loaded_model = load_model()
+
+
+    # from keras.datasets import mnist
+    # (train_images, train_labels), (test_images, test_labels) = mnist.load_data()
+    # train_images = train_images.reshape((60000, 28 * 28))
+    # train_images = train_images.astype('float32') / 255
+    # test_images = test_images.reshape((10000, 28 * 28))
+    # test_images = test_images.astype('float32') / 255
+
+    # from keras.utils import to_categorical
+    # train_labels = to_categorical(train_labels)
+    # test_labels = to_categorical(test_labels)
+
+
+    # # evaluate loaded model on test data
+    # loaded_model.compile(loss='binary_crossentropy', optimizer='rmsprop', metrics=['accuracy'])
+    # score = loaded_model.evaluate(train_images, train_labels, verbose=0)
+    # print("%s: %.2f%%" % (loaded_model.metrics_names[1], score[1]*100))
+
 
 
     

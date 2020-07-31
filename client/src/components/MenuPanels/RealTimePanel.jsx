@@ -11,8 +11,8 @@ import {
   realTimeConnStop
 } from "../../thunks/symbols";
 
-const ENDPOINT = "http://localhost:3000";
-const socket = socketIOClient(ENDPOINT);
+// const ENDPOINT = "http://localhost:3000";
+// const socket = socketIOClient(ENDPOINT);
 
 const RealTimePanel = () => {
   const dispatch = useDispatch();
@@ -49,8 +49,8 @@ const RealTimePanel = () => {
         Stop Connection
       </button>
 
-      <button onClick={() => socket.emit("real_time")}>Real Time Prices</button>
-      <button onClick={() => socket.close()}>Stop connection</button>
+      {/* <button onClick={() => socket.emit("real_time")}>Real Time Prices</button>
+      <button onClick={() => socket.close()}>Stop connection</button> */}
     </div>
   );
 };
