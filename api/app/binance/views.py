@@ -4,7 +4,7 @@ from .db_op import process_ma,save_symbol_data_to_mongo, process_macd, get_all_s
 from .hunting import hunt_macd
 from .trading import simulate_macd_trade, simulate_macd_trade_crossover, simulate_rsi_trade
 from .prophet_forecast import forecast_data
-from .AI import calculate_extrema, prepare_data, buid_model, apply_model
+from .AI import calculate_extrema, prepare_data, buid_model, train_model
 import json
 from api.app.extensions import mongo_client, socketio
 from .io_blueprint import IOBlueprint
@@ -153,12 +153,14 @@ def ai_extrema(symbol, timeframe):
 @binance_bp.route('/ai/prepare_data/<symbol>/<timeframe>')
 def prepare_data_route(symbol, timeframe):
     train_x, train_y, test_x, test_y = prepare_data(symbol, timeframe)
-    
-    data_shape = train_x.shape[1:]
 
-    network = buid_model(data_shape)
-    print(network.summary())
-    test_loss, test_acc = apply_model(network, train_x, train_y, test_x, test_y)
+    train_x = train_x.reshape(-1, train_x.shape[-2])
+    test_x = test_x.reshape(-1, test_x.shape[-2])
+
+
+    network = buid_model(train_x.shape)
+    network = train_model(network, train_x, train_y, test_x, test_y)
+    test_loss, test_acc = network.evaluate(test_x, test_y)
 
     print("Loss", test_loss, "Acc", test_acc)
 

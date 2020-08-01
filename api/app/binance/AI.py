@@ -37,6 +37,7 @@ def preprocess_df(df):
             # print(scalar.data_max_, scalar.data_min_)
             df[col] = scalar.transform(df[col].values.reshape(-1, 1))
 
+
     df.dropna(inplace=True)
     sequential_data = []
     prev_days = deque(maxlen=SEQ_LEN)
@@ -45,7 +46,7 @@ def preprocess_df(df):
     for i in df.values:
         prev_days.append([n for n in i[:-1]])
         if len(prev_days) == SEQ_LEN:
-            sequential_data.append([np.array(prev_days), i[-1]])
+            sequential_data.append([prev_days, i[-1]])
 
     random.shuffle(sequential_data)
 
@@ -93,7 +94,7 @@ def load_model():
     return loaded_model
 
 
-def apply_model(network, train_images, train_labels, test_images, test_labels):
+def train_model(network, train_images, train_labels, test_images, test_labels):
 
     network.fit(train_images, train_labels, epochs=5, batch_size=64)
 
@@ -105,20 +106,18 @@ def apply_model(network, train_images, train_labels, test_images, test_labels):
     # network.save_weights("model.h5")
     # print("Saved model to disk")
 
-    # test_loss, test_acc = network.evaluate(test_images, test_labels)
 
     # predictions = network.predict([test_images])
     # print(np.argmax(predictions[0]))
-    return 1,2
+    return network
 
 def buid_model(input_shape):
     network = models.Sequential()
-    network.add(layers.LSTM(128, input_shape=input_shape, return_sequences=True))
-    network.add(layers.Dense(32, activation='relu'))
+    # network.add(layers.LSTM(128, input_shape=input_shape, return_sequences=True))
+    network.add(layers.Dense(128, activation='relu', input_shape=input_shape))
     network.add(layers.Dense(2, activation='softmax'))
     
-    opt = optimizers.Adam(lr=0.001, decay=1e-6)
-    network.compile(optimizer=opt, loss='sparse_categorical_crossentropy', metrics='accuracy')
+    network.compile(optimizer='adam', loss='binary_crossentropy', metrics='accuracy')
 
     return network
 
