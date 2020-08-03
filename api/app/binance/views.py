@@ -154,11 +154,22 @@ def ai_extrema(symbol, timeframe):
 def prepare_data_route(symbol, timeframe):
     train_x, train_y, test_x, test_y = prepare_data(symbol, timeframe)
 
-    train_x = train_x.reshape(-1, train_x.shape[-2])
-    test_x = test_x.reshape(-1, test_x.shape[-2])
+    # train _x and train_y shape must match the number of dim
+    train_x = train_x
+    train_y.shape += (1,1)
+    test_x = test_x
+    test_y.shape += (1,1)
+    sample_shape = (train_x.shape[1], train_x.shape[2], 1)
+
+    # print("XXXXXXXXXXXXX", train_x.shape)
+    # print("TTTTTTT",test_x.shape)
+    # print("TTTTTTTY",test_y.shape)
+    # print("SAMPLE_shape", sample_shape)
+
+    # print(test_y)
 
 
-    network = buid_model(train_x.shape)
+    network = buid_model(sample_shape)
     network = train_model(network, train_x, train_y, test_x, test_y)
     test_loss, test_acc = network.evaluate(test_x, test_y)
 

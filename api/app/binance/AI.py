@@ -7,9 +7,11 @@ import math
 from sklearn import preprocessing
 from collections import deque
 import random
-
+import keras
 from keras import models
 from keras import layers, optimizers
+
+
 
 # basead on the last 60 candles
 SEQ_LEN = 10
@@ -113,11 +115,16 @@ def train_model(network, train_images, train_labels, test_images, test_labels):
 
 def buid_model(input_shape):
     network = models.Sequential()
+    # network.add(layers.Flatten())
     # network.add(layers.LSTM(128, input_shape=input_shape, return_sequences=True))
-    network.add(layers.Dense(128, activation='relu', input_shape=input_shape))
+    network.add(layers.Dense(128, activation='relu'))
+    # print("MMM1", network.output_shape)
     network.add(layers.Dense(2, activation='softmax'))
+    # print("MMM2", network.output_shape)
+    keras.utils.plot_model(network, show_shapes=True)
+
     
-    network.compile(optimizer='adam', loss='binary_crossentropy', metrics='accuracy')
+    network.compile(optimizer='adam', loss='binary_crossentropy', metrics='accuracy', run_eagerly=True)
 
     return network
 
