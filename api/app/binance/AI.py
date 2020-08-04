@@ -48,7 +48,7 @@ def preprocess_df(df):
     for i in df.values:
         prev_days.append([n for n in i[:-1]])
         if len(prev_days) == SEQ_LEN:
-            sequential_data.append([prev_days, i[-1]])
+            sequential_data.append([list(prev_days), i[-1]])
 
     random.shuffle(sequential_data)
 
@@ -96,9 +96,9 @@ def load_model():
     return loaded_model
 
 
-def train_model(network, train_images, train_labels, test_images, test_labels):
+def train_model(network, train_images, train_labels):
 
-    network.fit(train_images, train_labels, epochs=5, batch_size=64)
+    network.fit(train_images, train_labels, epochs=20, batch_size=64)
 
     # # serialize model to JSON
     # model_json = network.to_json()
@@ -131,10 +131,14 @@ def buid_model(input_shape):
 def prepare_data(symbol, timeframe):
     data = get_symbol_data(symbol, timeframe)
     close = data['close']
+    volume = data['volume']
     close_time = data['close_time']
-    df = pd.DataFrame(list(zip(data['close_time'], data['close'])), columns=['time','close'])
+    df = pd.DataFrame(list(zip(data['close_time'], data['close'], data['volume'])), columns=['time','close', 'volume'])
     df['future'] = df['close'].shift(-FUTURE_PERIOD_PREDICT)
     df['target'] = list(map(classify, df['close'], df['future']))
+
+    print("DF", df)
+
 #     time              close    future     target
 # 0    1588694399999  0.023032  0.023034       1
 # 1    1588708799999  0.022928  0.023011       1

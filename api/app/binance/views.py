@@ -8,6 +8,7 @@ from .AI import calculate_extrema, prepare_data, buid_model, train_model
 import json
 from api.app.extensions import mongo_client, socketio
 from .io_blueprint import IOBlueprint
+import numpy as np
 
 from .events import handle_message
 
@@ -153,26 +154,22 @@ def ai_extrema(symbol, timeframe):
 @binance_bp.route('/ai/prepare_data/<symbol>/<timeframe>')
 def prepare_data_route(symbol, timeframe):
     train_x, train_y, test_x, test_y = prepare_data(symbol, timeframe)
-
+    shape_x = np.prod(train_x.shape[1:])
     # train _x and train_y shape must match the number of dim
-    train_x = train_x
     train_y.shape += (1,1)
-    test_x = test_x
+    train_x = train_x.reshape(-1, shape_x)
+    test_x = test_x.reshape(-1, shape_x)
     test_y.shape += (1,1)
-    sample_shape = (train_x.shape[1], train_x.shape[2], 1)
+    sample_shape = (train_x.shape, 1)
 
-    # print("XXXXXXXXXXXXX", train_x.shape)
-    # print("TTTTTTT",test_x.shape)
-    # print("TTTTTTTY",test_y.shape)
-    # print("SAMPLE_shape", sample_shape)
-
-    # print(test_y)
 
 
     network = buid_model(sample_shape)
-    network = train_model(network, train_x, train_y, test_x, test_y)
+    network = train_model(network, train_x, train_y)
+    y_new = network.predict(test_x)
+    print("Prediction", y_new)
     test_loss, test_acc = network.evaluate(test_x, test_y)
-
+    # print("A", np.argmax(y_new, axis=1))
     print("Loss", test_loss, "Acc", test_acc)
 
 
