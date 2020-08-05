@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from scipy.signal import argrelextrema
-from .db_op import get_symbol_data
+from .db_op import get_symbol_data, get_symbol_indicator
 import math
 from sklearn import preprocessing
 from collections import deque
@@ -14,10 +14,10 @@ from keras import layers, optimizers
 
 
 # basead on the last 60 candles
-SEQ_LEN = 10
+SEQ_LEN = 1
 
 # try to predict the next 3 candle
-FUTURE_PERIOD_PREDICT = 3
+FUTURE_PERIOD_PREDICT = 1
 
 
 def classify(current, future):
@@ -27,18 +27,24 @@ def classify(current, future):
     else:
         return 0
 
+def scale_column(col_values):
+    """ Scale the values of a column between 0 and 1 """
+
+    scalar = preprocessing.MinMaxScaler()
+    scalar.fit(col_values)
+    # print(scalar.data_max_, scalar.data_min_)
+    return scalar.transform(col_values)
+
+
 def preprocess_df(df):
     df.drop('future', 1, inplace=True)
     
     for col in df.columns:
         if col != "target":
-            df[col] = df[col].pct_change()
-            df.dropna(inplace=True)
-            scalar = preprocessing.MinMaxScaler()
-            scalar.fit(df[col].values.reshape(-1, 1))
-            # print(scalar.data_max_, scalar.data_min_)
-            df[col] = scalar.transform(df[col].values.reshape(-1, 1))
-
+            if col== 'close':
+                df[col] = df[col].pct_change()
+                df.dropna(inplace=True)
+            df[col] = scale_column(df[col].values.reshape(-1, 1))
 
     df.dropna(inplace=True)
     sequential_data = []
@@ -98,7 +104,7 @@ def load_model():
 
 def train_model(network, train_images, train_labels):
 
-    network.fit(train_images, train_labels, epochs=20, batch_size=64)
+    network.fit(train_images, train_labels, epochs=30, batch_size=64)
 
     # # serialize model to JSON
     # model_json = network.to_json()
@@ -117,37 +123,54 @@ def buid_model(input_shape):
     network = models.Sequential()
     # network.add(layers.Flatten())
     # network.add(layers.LSTM(128, input_shape=input_shape, return_sequences=True))
+    network.add(layers.Dense(400, activation='relu'))
     network.add(layers.Dense(128, activation='relu'))
-    # print("MMM1", network.output_shape)
     network.add(layers.Dense(2, activation='softmax'))
-    # print("MMM2", network.output_shape)
     keras.utils.plot_model(network, show_shapes=True)
 
-    
-    network.compile(optimizer='adam', loss='binary_crossentropy', metrics='accuracy', run_eagerly=True)
+    opt = keras.optimizers.Adam(learning_rate=0.00001)
+    network.compile(optimizer=opt, loss='binary_crossentropy', metrics='accuracy', run_eagerly=True)
 
     return network
 
-def prepare_data(symbol, timeframe):
+
+def get_dict_indicator(symbol, timeframe, indicator):
+    """ Return a dictionary for a given indicator """
+    if indicator == "MACD":
+        macd = get_symbol_indicator(symbol, timeframe=timeframe, indicator="MACD")
+        macd.pop("MACD")
+        macd.pop("MACDSIG")
+        return macd
+    elif  indicator == "RSI":
+        rsi = get_symbol_indicator(symbol, timeframe=timeframe, indicator="RSI")
+        return {"RSI": rsi}
+
+
+def create_dataframe(symbol, timeframe, columns, index_column, indicators=[]):
+    """ Create a data frame from a given symbol with specified columns and indicators"""
     data = get_symbol_data(symbol, timeframe)
-    close = data['close']
-    volume = data['volume']
-    close_time = data['close_time']
-    df = pd.DataFrame(list(zip(data['close_time'], data['close'], data['volume'])), columns=['time','close', 'volume'])
+    data_dict = {c: data[c] for c in columns}
+    df_dict = {}
+    for i in indicators:
+        indicators_data = get_dict_indicator(symbol, timeframe=timeframe, indicator=i)
+        df_dict = {**df_dict, **data_dict, **indicators_data}
+    df = pd.DataFrame(df_dict)
+    df.set_index(index_column, inplace=True)
+    return df
+
+def prepare_data(symbol, timeframe, columns, index_column, indicators=[]):
+    if 'close' not in columns:
+        columns.append('close')
+        close = False
+    else:
+        close = True
+
+    df = create_dataframe(symbol, timeframe, columns, index_column, indicators)
     df['future'] = df['close'].shift(-FUTURE_PERIOD_PREDICT)
     df['target'] = list(map(classify, df['close'], df['future']))
-
-    print("DF", df)
-
-#     time              close    future     target
-# 0    1588694399999  0.023032  0.023034       1
-# 1    1588708799999  0.022928  0.023011       1
-# 2    1588723199999  0.022753  0.022551       0
-# 3    1588737599999  0.023034  0.022453       0
-# 4    1588751999999  0.023011  0.022143       0
     
-    df.set_index('time', inplace=True)
-
+    if not close:
+        df.drop('close', 1, inplace=True)
     times = sorted(df.index.values)
     back_slice = int(0.05*len(times))
     last_5pct = times[-back_slice]
@@ -159,39 +182,7 @@ def prepare_data(symbol, timeframe):
 
     return train_x, train_y, validation_x, validation_y
 
-    # print(f"train data size: {len(train_x)}, validation size: {len(validation_x)}")
-    # print(f"Dont buys: {train_y.count(0)}, buys: {train_y.count(1)}")
-    # print(f"Validation dont buys: {validation_y.count(0)}, buys: {validation_y.count(1)}")
 
-
-
-    # model = buid_model()
-    # network, test_loss, test_acc = apply_model(model)
-    # print('test_acc:', test_acc, 'test_loss', test_loss)
-
-    # loaded_model = load_model()
-
-
-    # from keras.datasets import mnist
-    # (train_images, train_labels), (test_images, test_labels) = mnist.load_data()
-    # train_images = train_images.reshape((60000, 28 * 28))
-    # train_images = train_images.astype('float32') / 255
-    # test_images = test_images.reshape((10000, 28 * 28))
-    # test_images = test_images.astype('float32') / 255
-
-    # from keras.utils import to_categorical
-    # train_labels = to_categorical(train_labels)
-    # test_labels = to_categorical(test_labels)
-
-
-    # # evaluate loaded model on test data
-    # loaded_model.compile(loss='binary_crossentropy', optimizer='rmsprop', metrics=['accuracy'])
-    # score = loaded_model.evaluate(train_images, train_labels, verbose=0)
-    # print("%s: %.2f%%" % (loaded_model.metrics_names[1], score[1]*100))
-
-
-
-    
 
 def calculate_extrema(symbol, timeframe):
     data = get_symbol_data(symbol, timeframe)

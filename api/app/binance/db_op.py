@@ -43,7 +43,7 @@ def get_symbol_indicator(symbol, indicator, timeframe):
             process_rsi(symbol, timeframe)
         return col.find_one({"symbol":symbol}, {"_id":0, "data":1, "indicators": 1})
 
-    return data
+    return data['indicators'][indicator]
 
 def get_all_symbols_indicator(timeframe):
     """ Get the same indicator for all symbols at once """
