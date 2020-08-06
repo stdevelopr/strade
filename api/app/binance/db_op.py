@@ -55,6 +55,7 @@ def get_all_symbols_indicator(timeframe):
 def get_symbol_data(symbol, timeframe):
     """ Get a symbol data from database, if it does not exist fetch from binance, save and return"""
     data = col.find_one({"symbol":symbol, "timeframe": timeframe})
+    # data = None
     if not data:
         resp = fetch_symbol_data(symbol, timeframe)
         parsed_resp = parse_binance_response(resp)

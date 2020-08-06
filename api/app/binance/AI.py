@@ -10,14 +10,22 @@ import random
 import keras
 from keras import models
 from keras import layers, optimizers
+from keras.callbacks import TensorBoard
+import tensorflow as tf
+import shutil
+
 
 
 
 # basead on the last 60 candles
-SEQ_LEN = 1
+SEQ_LEN = 10
 
 # try to predict the next 3 candle
-FUTURE_PERIOD_PREDICT = 1
+FUTURE_PERIOD_PREDICT = 3
+
+NAME = "ai_model"
+tensorboard = TensorBoard(log_dir=f'logs/{NAME}')
+RATIO = "LTC-USD"
 
 
 def classify(current, future):
@@ -41,9 +49,8 @@ def preprocess_df(df):
     
     for col in df.columns:
         if col != "target":
-            if col== 'close':
-                df[col] = df[col].pct_change()
-                df.dropna(inplace=True)
+            df[col] = df[col].pct_change()
+            df.dropna(inplace=True)
             df[col] = scale_column(df[col].values.reshape(-1, 1))
 
     df.dropna(inplace=True)
@@ -87,6 +94,7 @@ def preprocess_df(df):
         X.append(seq)
         y.append(target)
 
+
     return np.array(X), np.array(y)
 
 def load_model():
@@ -102,9 +110,11 @@ def load_model():
     return loaded_model
 
 
-def train_model(network, train_images, train_labels):
+def train_model(network, train_x, train_y, validation_x, validation_y):
+    val_dataset = tf.data.Dataset.from_tensor_slices((validation_x, validation_y))
+    val_dataset = val_dataset.batch(64)
 
-    network.fit(train_images, train_labels, epochs=30, batch_size=64)
+    network.fit(train_x, train_y, epochs=10, batch_size=64, validation_data=val_dataset, callbacks=[tensorboard])
 
     # # serialize model to JSON
     # model_json = network.to_json()
@@ -122,13 +132,25 @@ def train_model(network, train_images, train_labels):
 def buid_model(input_shape):
     network = models.Sequential()
     # network.add(layers.Flatten())
-    # network.add(layers.LSTM(128, input_shape=input_shape, return_sequences=True))
-    network.add(layers.Dense(400, activation='relu'))
-    network.add(layers.Dense(128, activation='relu'))
-    network.add(layers.Dense(2, activation='softmax'))
-    keras.utils.plot_model(network, show_shapes=True)
+    network.add(layers.LSTM(128, input_shape=input_shape, return_sequences=True))
+    network.add(layers.Dropout(0.2))
+    network.add(layers.BatchNormalization())
 
-    opt = keras.optimizers.Adam(learning_rate=0.00001)
+    network.add(layers.LSTM(128, input_shape=input_shape, return_sequences=True))
+    network.add(layers.Dropout(0.2))
+    network.add(layers.BatchNormalization())
+
+    network.add(layers.LSTM(128, input_shape=input_shape, return_sequences=True))
+    network.add(layers.Dropout(0.2))
+    network.add(layers.BatchNormalization())
+
+
+    network.add(layers.Dense(128, activation='relu'))
+    network.add(layers.Dropout(0.2))
+    network.add(layers.Dense(2, activation='softmax'))
+    # keras.utils.plot_model(network, show_shapes=True)
+
+    opt = keras.optimizers.Adam(learning_rate=0.001, decay=1e-6)
     network.compile(optimizer=opt, loss='binary_crossentropy', metrics='accuracy', run_eagerly=True)
 
     return network
@@ -148,15 +170,36 @@ def get_dict_indicator(symbol, timeframe, indicator):
 
 def create_dataframe(symbol, timeframe, columns, index_column, indicators=[]):
     """ Create a data frame from a given symbol with specified columns and indicators"""
-    data = get_symbol_data(symbol, timeframe)
-    data_dict = {c: data[c] for c in columns}
-    df_dict = {}
-    for i in indicators:
-        indicators_data = get_dict_indicator(symbol, timeframe=timeframe, indicator=i)
-        df_dict = {**df_dict, **data_dict, **indicators_data}
-    df = pd.DataFrame(df_dict)
-    df.set_index(index_column, inplace=True)
-    return df
+    print("Num GPUs Available: ", tf.test.is_gpu_available(cuda_only=False, min_cuda_compute_capability=None))
+    print("TFF", print(tf.__version__))
+
+    main_df = pd.DataFrame()
+    ratios = ["BTC-USD", "LTC-USD", "ETH-USD", "BCH-USD"]
+    for ratio in ratios:
+        dataset = f"crypto_data/{ratio}.csv"
+        df = pd.read_csv(dataset, names=['time', 'low', 'high', 'open', 'close', 'volume'])
+        df.rename(columns={"close":f"{ratio}_close", "volume":f"{ratio}_volume"}, inplace=True)
+        df.set_index("time", inplace=True)
+        df = df[[f"{ratio}_close", f"{ratio}_volume"]]
+
+        if len(main_df) == 0:
+            main_df = df
+        else:
+            main_df = main_df.join(df)
+
+    main_df['future'] = main_df[f"{RATIO}_close"].shift(-FUTURE_PERIOD_PREDICT)
+    main_df['target'] = list(map(classify, main_df[f"{RATIO}_close"], main_df[f"future"]))
+
+
+    # data = get_symbol_data(symbol, timeframe)
+    # data_dict = {c: data[c] for c in columns}
+    # # df_dict = {**data_dict}
+    # for i in indicators:
+    #     indicators_data = get_dict_indicator(symbol, timeframe=timeframe, indicator=i)
+    #     data_dict = {**data_dict, **indicators_data}
+    # df = pd.DataFrame(data_dict)
+    # df.set_index(index_column, inplace=True)
+    return main_df
 
 def prepare_data(symbol, timeframe, columns, index_column, indicators=[]):
     if 'close' not in columns:
@@ -166,17 +209,16 @@ def prepare_data(symbol, timeframe, columns, index_column, indicators=[]):
         close = True
 
     df = create_dataframe(symbol, timeframe, columns, index_column, indicators)
-    df['future'] = df['close'].shift(-FUTURE_PERIOD_PREDICT)
-    df['target'] = list(map(classify, df['close'], df['future']))
+    # df['future'] = df['close'].shift(-FUTURE_PERIOD_PREDICT)
+    # df['target'] = list(map(classify, df['close'], df['future']))
     
-    if not close:
-        df.drop('close', 1, inplace=True)
+    # if not close:
+    #     df.drop('close', 1, inplace=True)
     times = sorted(df.index.values)
     back_slice = int(0.05*len(times))
     last_5pct = times[-back_slice]
     validation_df = df[(df.index >= last_5pct)]
     df = df[(df.index < last_5pct)]
-
     validation_x, validation_y = preprocess_df(validation_df)
     train_x, train_y = preprocess_df(df)
 

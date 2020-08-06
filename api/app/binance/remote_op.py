@@ -64,6 +64,6 @@ def fetch_all_symbols_names() -> list:
 def fetch_symbol_data(symbol:str, timeframe:str ) -> list :
     """ Returns the data for a given symbol """
 
-    data = client.get_klines(symbol=symbol, interval=timeframe)
+    data = client.get_klines(symbol=symbol, interval=timeframe, limit=1000)
     return data
     
