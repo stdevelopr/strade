@@ -156,21 +156,23 @@ def ai_extrema(symbol, timeframe):
 def prepare_data_route(symbol, timeframe):
     # shutil.rmtree('logs')
     train_x, train_y, test_x, test_y = prepare_data(symbol, timeframe, columns=['close_time', 'close','volume'], index_column='close_time', indicators=[])
-
-    shape_x = np.prod(train_x.shape[1:])
+    print("Train_x shape", train_x.shape)
+    print(train_x)
+    shape_x = train_x.shape[1:]
     # train _x and train_y shape must match the number of dim
     train_y.shape += (1,1)
-    train_x = train_x.reshape(-1, shape_x)
-    test_x = test_x.reshape(-1, shape_x)
+    # train_x = train_x.reshape(-1, shape_x)
+    # test_x = test_x.reshape(-1, shape_x)
     test_y.shape += (1,1)
-    sample_shape = (shape_x, 1)
+
+    print("Sample shape", shape_x)
 
     print(f"train: {len(train_x)} validation:{len(train_y)}")
     print(f"dont buy {(test_y==0).sum()} , buys {(test_y==1).sum()}")
     print(f"validation dont buy {(test_y==0).sum()} , validation buys {(test_y==1).sum()}")
 
-    # network = buid_model(sample_shape)
-    # network = train_model(network, train_x, train_y, test_x, test_y)
+    network = buid_model(shape_x)
+    network = train_model(network, train_x, train_y, test_x, test_y)
     # # # y_new = network.predict(test_x)
     # # # print("Prediction", y_new)
     # # # print("A", np.argmax(y_new, axis=1))

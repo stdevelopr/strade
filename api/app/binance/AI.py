@@ -15,10 +15,19 @@ import tensorflow as tf
 import shutil
 
 
+# config = tf.compat.v1.ConfigProto()
+# config.gpu_options.allow_growth = True
+# session = tf.compat.v1.Session(config=config)
+
+# uncomment to use CPU
+import os
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
+
 
 
 # basead on the last 60 candles
-SEQ_LEN = 10
+SEQ_LEN = 3
 
 # try to predict the next 3 candle
 FUTURE_PERIOD_PREDICT = 3
@@ -112,9 +121,9 @@ def load_model():
 
 def train_model(network, train_x, train_y, validation_x, validation_y):
     val_dataset = tf.data.Dataset.from_tensor_slices((validation_x, validation_y))
-    val_dataset = val_dataset.batch(64)
+    val_dataset = val_dataset.batch(5)
 
-    network.fit(train_x, train_y, epochs=10, batch_size=64, validation_data=val_dataset, callbacks=[tensorboard])
+    network.fit(train_x, train_y, epochs=10, batch_size=5, validation_data=val_dataset, callbacks=[tensorboard])
 
     # # serialize model to JSON
     # model_json = network.to_json()
@@ -130,30 +139,34 @@ def train_model(network, train_x, train_y, validation_x, validation_y):
     return network
 
 def buid_model(input_shape):
-    network = models.Sequential()
-    # network.add(layers.Flatten())
-    network.add(layers.LSTM(128, input_shape=input_shape, return_sequences=True))
-    network.add(layers.Dropout(0.2))
-    network.add(layers.BatchNormalization())
+    with tf.device('/cpu:0'):
+        network = models.Sequential()
+        # network.add(layers.Flatten())
+        print("SEquential model")
+        network.add(layers.LSTM(128, input_shape=input_shape, return_sequences=True))
+        network.add(layers.Dropout(0.2))
+        network.add(layers.BatchNormalization())
 
-    network.add(layers.LSTM(128, input_shape=input_shape, return_sequences=True))
-    network.add(layers.Dropout(0.2))
-    network.add(layers.BatchNormalization())
+        network.add(layers.LSTM(128, input_shape=input_shape, return_sequences=True))
+        network.add(layers.Dropout(0.2))
+        network.add(layers.BatchNormalization())
 
-    network.add(layers.LSTM(128, input_shape=input_shape, return_sequences=True))
-    network.add(layers.Dropout(0.2))
-    network.add(layers.BatchNormalization())
+        network.add(layers.LSTM(128, input_shape=input_shape, return_sequences=True))
+        network.add(layers.Dropout(0.2))
+        network.add(layers.BatchNormalization())
 
 
-    network.add(layers.Dense(128, activation='relu'))
-    network.add(layers.Dropout(0.2))
-    network.add(layers.Dense(2, activation='softmax'))
-    # keras.utils.plot_model(network, show_shapes=True)
+        network.add(layers.Dense(128, activation='relu'))
+        network.add(layers.Dropout(0.2))
+        network.add(layers.Dense(2, activation='softmax'))
+        # keras.utils.plot_model(network, show_shapes=True)
 
-    opt = keras.optimizers.Adam(learning_rate=0.001, decay=1e-6)
-    network.compile(optimizer=opt, loss='binary_crossentropy', metrics='accuracy', run_eagerly=True)
+        opt = keras.optimizers.Adam(learning_rate=0.001, decay=1e-6)
+        print("Before compile model")
+        network.compile(optimizer=opt, loss='binary_crossentropy', metrics='accuracy', run_eagerly=False)
+        print("Model compiled")
 
-    return network
+        return network
 
 
 def get_dict_indicator(symbol, timeframe, indicator):

@@ -1,8 +1,9 @@
 from api.app.extensions import mongo_client
 from .remote_op import fetch_all_symbols_names, fetch_symbol_data
-from .utils import parse_binance_response
+from .utils import parse_binance_response_json, parse_binance_response_hdf5
 from api.app.indicators import MA, MACD, RSI
-
+import h5py
+import numpy as np
 db = mongo_client["strade_db"]
 col = db["BINANCE"]
 
@@ -54,12 +55,25 @@ def get_all_symbols_indicator(timeframe):
 ### Symbols data
 def get_symbol_data(symbol, timeframe):
     """ Get a symbol data from database, if it does not exist fetch from binance, save and return"""
-    data = col.find_one({"symbol":symbol, "timeframe": timeframe})
-    # data = None
+    # data = col.find_one({"symbol":symbol, "timeframe": timeframe})
+    data = None
     if not data:
         resp = fetch_symbol_data(symbol, timeframe)
-        parsed_resp = parse_binance_response(resp)
-        col.insert_one({"symbol": symbol, "timeframe":timeframe, "data": parsed_resp})
+        resp_arr = np.array(resp).astype(float)
+        parsed_resp = parse_binance_response_json(resp)
+        with h5py.File("binance.hdf5", "a") as f:
+            data = f.get(f"{timeframe}/{symbol}/data")
+            if data:
+                print(data[:,0])
+                r = parse_binance_response_hdf5(data)
+                return r
+                # data[...] = np.array(resp_arr)
+            else:
+                f[f"{timeframe}/{symbol}/data"] = np.array(resp_arr)
+                f[f"{timeframe}/{symbol}/data"].attrs['column_names'] = ['open_time', 'open', 'high', 'low', 'close', 'volume', 'close_time',\
+                                                             'quote_asset_volume', 'number_trades', 'taker_buy_base_asset_volume', 'taker_buy_quote_asset_volume', 'can_be_ignored']
+
+        # col.insert_one({"symbol": symbol, "timeframe":timeframe, "data": parsed_resp})
         return parsed_resp
     
     return data['data']

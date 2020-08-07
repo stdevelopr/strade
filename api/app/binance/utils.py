@@ -1,4 +1,4 @@
-def parse_binance_response(data):
+def parse_binance_response_json(data):
     """ Split the binance response format into independent lists for each entry"""
     ot = []
     o = []
@@ -24,6 +24,13 @@ def parse_binance_response(data):
         tqv.append(k[9])
 
     return  {"open_time":ot,"open":o,"low":l,"high": h,"close":c,"volume":v,"close_time":ct, "number_trades": nots, "tbv": tbv, "tqv":tqv}
+
+def parse_binance_response_hdf5(data):
+    """ Split the binance response format into independent lists for each entry from an np.array"""
+
+    columns = data.attrs.get('column_names')
+
+    return  {columns[i]: list(data[:,i]) for i in range(len(columns))}
 
 
 def find_last_potive_cross(arr):

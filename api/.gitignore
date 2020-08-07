@@ -2,3 +2,5 @@
 *.pyc
 .flaskenv
 __pycache__
+*.hdf5
+/logs/
