@@ -52,31 +52,50 @@ def get_all_symbols_indicator(timeframe):
 
     return list(data)
 
-### Symbols data
-def get_symbol_data(symbol, timeframe):
-    """ Get a symbol data from database, if it does not exist fetch from binance, save and return"""
-    # data = col.find_one({"symbol":symbol, "timeframe": timeframe})
-    data = None
+
+def get_symbol_data_mongo(symbol, timeframe):
+    """ Get a symbol data from mongo database, if it does not exist fetch from binance, save and return"""
+    data = col.find_one({"symbol":symbol, "timeframe": timeframe})
     if not data:
         resp = fetch_symbol_data(symbol, timeframe)
-        resp_arr = np.array(resp).astype(float)
         parsed_resp = parse_binance_response_json(resp)
-        with h5py.File("binance.hdf5", "a") as f:
-            data = f.get(f"{timeframe}/{symbol}/data")
-            if data:
-                print(data[:,0])
-                r = parse_binance_response_hdf5(data)
-                return r
-                # data[...] = np.array(resp_arr)
-            else:
-                f[f"{timeframe}/{symbol}/data"] = np.array(resp_arr)
-                f[f"{timeframe}/{symbol}/data"].attrs['column_names'] = ['open_time', 'open', 'high', 'low', 'close', 'volume', 'close_time',\
-                                                             'quote_asset_volume', 'number_trades', 'taker_buy_base_asset_volume', 'taker_buy_quote_asset_volume', 'can_be_ignored']
-
-        # col.insert_one({"symbol": symbol, "timeframe":timeframe, "data": parsed_resp})
+        col.insert_one({"symbol": symbol, "timeframe":timeframe, "data": parsed_resp})
         return parsed_resp
     
     return data['data']
+
+### Symbols data
+def get_symbol_data(symbol, timeframe):
+    """ Get a symbol data from database, if it does not exist fetch from binance, save and return"""
+    with h5py.File("binance.hdf5", "a") as f:
+        data = f.get(f"{timeframe}/{symbol}/data")
+        if data:
+            r = parse_binance_response_hdf5(data)
+            return r
+        else:
+            resp = fetch_symbol_data(symbol, timeframe)
+            resp_arr = np.array(resp).astype(float)
+            f[f"{timeframe}/{symbol}/data"] = np.array(resp_arr)
+            f[f"{timeframe}/{symbol}/data"].attrs['column_names'] = ['open_time', 'open', 'high', 'low', 'close', 'volume', 'close_time',\
+                                                            'quote_asset_volume', 'number_trades', 'taker_buy_base_asset_volume', 'taker_buy_quote_asset_volume', 'can_be_ignored']
+            r = parse_binance_response_hdf5(f[f"{timeframe}/{symbol}/data"])
+            return r
+
+def fill_db_all_symbols_data(timeframe):
+    with h5py.File("binance.hdf5", "a") as f:
+        for symbol in get_all_symbols_names():
+            if f"/{timeframe}/{symbol}" not in f:
+                print(f"Fetching {symbol}...")
+                resp = fetch_symbol_data(symbol, timeframe)
+                resp_arr = np.array(resp).astype(float)
+                f[f"{timeframe}/{symbol}/data"] = np.array(resp_arr)
+                f[f"{timeframe}/{symbol}/data"].attrs['column_names'] = ['open_time', 'open', 'high', 'low', 'close', 'volume', 'close_time',\
+                                                            'quote_asset_volume', 'number_trades', 'taker_buy_base_asset_volume', 'taker_buy_quote_asset_volume', 'can_be_ignored']
+                print("Ok.")
+        print("Completed")
+
+    return "OK"
+
 
 
 
@@ -94,6 +113,8 @@ def get_all_symbols_names():
         fetch_and_save_all_symbols_names_to_database()
         return symbols
     return r['symbols']
+
+
 
 
 

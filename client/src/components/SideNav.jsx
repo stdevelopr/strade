@@ -55,6 +55,12 @@ const Sidenav = () => {
         <p onClick={() => setContext("AI")} style={setSelectedStyle("AI")}>
           AI.
         </p>
+        <p
+          onClick={() => setContext("Admin")}
+          style={setSelectedStyle("Admin")}
+        >
+          Admin.
+        </p>
       </div>
     </div>
   );
