@@ -18,6 +18,21 @@ def process_ma(symbol):
     mongo.db[collection].update_one({"symbol":symbol}, {"$set":{"MA": ma.tolist()}})
     return ma
 
+def process_macd_hdf5(symbol, timeframe):
+    with h5py.File("binance.hdf5", "a") as f:
+        close = get_symbol_data(symbol, timeframe)['close']
+        macd, macdsignal, macdhist = MACD(close)
+        arr = np.array([macd, macdsignal, macdhist])
+        f[f"{timeframe}/{symbol}/indicators/MACD"] = arr
+        f[f"{timeframe}/{symbol}/indicators/MACD"].attrs['column_names'] = ['MACD', 'MACDSIG', 'MACDHIST']
+        return {"MACD": macd, "MACDSIG": macdsignal, "MACDHIST": macdhist}
+
+def process_rsi_hdf5(symbol, timeframe):
+    with h5py.File("binance.hdf5", "a") as f:
+        close = get_symbol_data(symbol, timeframe)['close']
+        real = RSI(close)
+        f[f"{timeframe}/{symbol}/indicators/RSI"] = real
+        return {"RSI": real}
 
 def process_macd(symbol, timeframe):
     close = col.find_one({"symbol":symbol, "timeframe": timeframe}, {"data.close": 1, "_id":0})['data']['close']
@@ -45,6 +60,23 @@ def get_symbol_indicator(symbol, indicator, timeframe):
         return col.find_one({"symbol":symbol}, {"_id":0, "data":1, "indicators": 1})
 
     return data['indicators'][indicator]
+
+def get_symbol_indicator_hdf5(symbol, indicator, timeframe):
+    """ Get the indicator for a given symbol, if it does not exist calculate and save it """
+    with h5py.File("binance.hdf5", "a") as f:
+        data = f.get(f"{timeframe}/{symbol}/indicators/{indicator}")
+        if data:
+            if indicator == "MACD":
+                return {"MACD": data[0], "MACDSIG": data[1], "MACDHIST": data[2]}
+            elif indicator == "RSI":
+                return {"RSI": data[0:]}
+
+        else:
+            if indicator == "MACD":
+                return process_macd_hdf5(symbol, timeframe)
+            if indicator == "RSI":
+                return process_rsi_hdf5(symbol, timeframe)
+
 
 def get_all_symbols_indicator(timeframe):
     """ Get the same indicator for all symbols at once """
@@ -94,9 +126,7 @@ def fill_db_all_symbols_data(timeframe):
                 print("Ok.")
         print("Completed")
 
-    return "OK"
-
-
+        return "OK"
 
 
 ####Symbols Names

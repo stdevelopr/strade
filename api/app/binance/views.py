@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, current_app
 from .remote_op import binance_connect, socket_connect, socket_stop
-from .db_op import process_ma,save_symbol_data_to_mongo, process_macd, get_all_symbols_names, get_symbol_data,  get_symbol_indicator, fill_db_all_symbols_data
+from .db_op import process_ma,save_symbol_data_to_mongo, process_macd, get_all_symbols_names, get_symbol_data,  get_symbol_indicator_hdf5, fill_db_all_symbols_data
 from .hunting import hunt_macd
 from .trading import simulate_macd_trade, simulate_macd_trade_crossover, simulate_rsi_trade
 from .prophet_forecast import forecast_data
@@ -55,19 +55,19 @@ def get_symbol(symbol, timeframe):
 def calculate_macd_route(symbol, timeframe):
     """Calculate the MACD for a symbol and return it"""
     
-    data = get_symbol_indicator(symbol, "MACD", timeframe)
-    macd = data['indicators']['MACD']['MACD']
-    signal = data['indicators']['MACD']['MACDSIG']
-    histogram = data['indicators']['MACD']['MACDHIST']
-    return jsonify({"macd": macd, "signal": signal, "histogram": histogram})
+    data = get_symbol_indicator_hdf5(symbol, "MACD", timeframe)
+    macd = data['MACD']
+    signal = data['MACDSIG']
+    histogram = data['MACDHIST']
+    return jsonify({"macd": macd.tolist(), "signal": signal.tolist(), "histogram": histogram.tolist()})
 
 
 @binance_bp.route('/indicator/rsi/<symbol>/<timeframe>')
 def get_rsi_route(symbol,timeframe):
-    data = get_symbol_indicator(symbol, "RSI", timeframe)
-    rsi = data["indicators"]["RSI"]
+    data = get_symbol_indicator_hdf5(symbol, "RSI", timeframe)
+    rsi = data["RSI"]
 
-    return jsonify({"SYMBOL": symbol, "data": rsi})
+    return jsonify({"SYMBOL": symbol, "data": rsi.tolist()})
 
 ##################################################################
 
