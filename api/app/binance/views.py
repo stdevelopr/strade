@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, current_app
 from .remote_op import binance_connect, socket_connect, socket_stop
-from .db_op import process_ma,save_symbol_data_to_mongo, process_macd, get_all_symbols_names, get_symbol_data,  get_symbol_indicator_hdf5, fill_db_all_symbols_data
+from .db_op import process_ma,save_symbol_data_to_mongo,  get_all_symbols_names, get_symbol_data,  get_symbol_indicator_hdf5, fill_db_all_symbols_data
 from .hunting import hunt_macd
 from .trading import simulate_macd_trade, simulate_macd_trade_crossover, simulate_rsi_trade
 from .prophet_forecast import forecast_data

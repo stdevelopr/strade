@@ -7,8 +7,7 @@ def hunt_macd(timeframe):
     pairs_info = get_all_symbols_indicator(timeframe)
     info_list = []
     for p in pairs_info:
-        last_cross = find_last_potive_cross(p['indicators']['MACD']['MACDHIST'])
+        last_cross = find_last_potive_cross(p['MACDHIST'])
         info_list.append({'symbol': p['symbol'], 'last_cross_index': last_cross})
 
-    print(info_list)
     return info_list

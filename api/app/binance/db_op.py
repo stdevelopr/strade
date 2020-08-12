@@ -18,7 +18,16 @@ def process_ma(symbol):
     mongo.db[collection].update_one({"symbol":symbol}, {"$set":{"MA": ma.tolist()}})
     return ma
 
+######################### HDF%
 def process_macd_hdf5(symbol, timeframe):
+    """ Calculates the MACD for a given symbol and save to hdf5 database
+    
+    Inputs: 
+        symbol: string
+        timeframe: string
+    Returns: a dict with the macd info
+    
+    """
     with h5py.File("binance.hdf5", "a") as f:
         close = get_symbol_data(symbol, timeframe)['close']
         macd, macdsignal, macdhist = MACD(close)
@@ -28,41 +37,33 @@ def process_macd_hdf5(symbol, timeframe):
         return {"MACD": macd, "MACDSIG": macdsignal, "MACDHIST": macdhist}
 
 def process_rsi_hdf5(symbol, timeframe):
+    """ Calculates the RSI for a given symbol and save to hdf5 database
+    
+    Inputs: 
+        symbol: string
+        timeframe: string
+    Returns: a dict with the RSI info
+    
+    """
     with h5py.File("binance.hdf5", "a") as f:
         close = get_symbol_data(symbol, timeframe)['close']
         real = RSI(close)
         f[f"{timeframe}/{symbol}/indicators/RSI"] = real
         return {"RSI": real}
 
-def process_macd(symbol, timeframe):
-    close = col.find_one({"symbol":symbol, "timeframe": timeframe}, {"data.close": 1, "_id":0})['data']['close']
-    macd, macdsignal, macdhist = MACD(close)
-    col.update_one({"symbol":symbol, "timeframe":timeframe}, {"$set": {"indicators.MACD": {"MACD": macd.tolist(), "MACDSIG": macdsignal.tolist(), "MACDHIST": macdhist.tolist()}}})
-    return macd, macdsignal, macdhist
-
-def process_rsi(symbol, timeframe='30m'):
-    close = col.find_one({"symbol":symbol, "timeframe":timeframe}, {"data.close": 1, "_id":0})['data']['close']
-    real = RSI(close)
-    col.update_one({"symbol":symbol, "timeframe":timeframe}, {"$set": {"indicators.RSI": real.tolist()}})
-    return real
 
 
-### Symbols indicators
-def get_symbol_indicator(symbol, indicator, timeframe):
-    """ Get the indicator for a given symbol, if it does not exist calculate and save it """
-
-    data = col.find_one({"symbol":symbol, "timeframe":timeframe}, {"_id":0, "data":1, "indicators": 1})
-    if "indicators" not in data or indicator not in data['indicators']:
-        if indicator == "MACD":
-            process_macd(symbol, timeframe)
-        if indicator == "RSI":
-            process_rsi(symbol, timeframe)
-        return col.find_one({"symbol":symbol}, {"_id":0, "data":1, "indicators": 1})
-
-    return data['indicators'][indicator]
 
 def get_symbol_indicator_hdf5(symbol, indicator, timeframe):
-    """ Get the indicator for a given symbol, if it does not exist calculate and save it """
+    """ Get the indicator for a given symbol, if it does not exist calculate and save it
+    
+    Inputs: 
+        symbol: string
+        indicator: string
+        timeframe: string
+    Returns: a dict with the indicator info
+    
+    """
     with h5py.File("binance.hdf5", "a") as f:
         data = f.get(f"{timeframe}/{symbol}/indicators/{indicator}")
         if data:
@@ -80,9 +81,18 @@ def get_symbol_indicator_hdf5(symbol, indicator, timeframe):
 
 def get_all_symbols_indicator(timeframe):
     """ Get the same indicator for all symbols at once """
-    data = col.find({"timeframe": timeframe, "indicators.MACD": { "$exists": True }}, {"indicators.MACD": 1, "symbol": 1, "_id": 0})
 
-    return list(data)
+    with h5py.File("binance.hdf5", "a") as f:
+        symbols = f.get(f"/{timeframe}")
+        macd_list = []
+        for s in symbols:
+            indicator = f.get(f"/{timeframe}/{s}/indicators/MACD")
+            try:
+                macd_list.append({"symbol": s, "MACDHIST": indicator[2]})
+            except:
+                pass
+
+    return macd_list
 
 
 def get_symbol_data_mongo(symbol, timeframe):
@@ -129,20 +139,28 @@ def fill_db_all_symbols_data(timeframe):
         return "OK"
 
 
-####Symbols Names
+
 def fetch_and_save_all_symbols_names_to_database():
-    """ Fetch all symbols names from the binance remote api """
+    """ Fetch all symbols names from the binance remote api and save to database """
     symbols = fetch_all_symbols_names()
-    col.update_one({"doc_name":"allSymbols"}, {"$set": {"symbols": symbols}}, upsert=True)
-    return symbols
+    with h5py.File("binance.hdf5", "a") as f:
+        try:
+            f['/all_symbols'] = np.array(symbols, dtype=h5py.string_dtype(encoding='utf-8'))
+        except Exception as e:
+            print("error", e)
+        return symbols
+
 
 def get_all_symbols_names():
     """ Query and return a list with all symbols from database, if not exist fetch and save """
-    r = col.find_one({"doc_name": "allSymbols"})
-    if not r:
-        fetch_and_save_all_symbols_names_to_database()
-        return symbols
-    return r['symbols']
+    with h5py.File("binance.hdf5", "a") as f:
+        symbols = f.get('/all_symbols')
+        if symbols:
+            return list(symbols)
+        else:
+            return fetch_and_save_all_symbols_names_to_database()
+
+
 
 
 
