@@ -45,7 +45,8 @@ const styles = {
     textAlign: "center"
   },
   open: {
-    width: "260px"
+    width: "260px",
+    overflowX: "scroll"
   },
   close: {
     width: "30px"

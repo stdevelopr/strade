@@ -19,11 +19,13 @@ const HuntPairsPanel = () => {
       <h3>Hunt</h3>
       <button onClick={() => dispatch(huntMACD(timeframe))}>Refresh</button>
       {pairsInfo.map(item => {
-        return (
-          <div>
-            {item.symbol}-{item.last_cross_index}
-          </div>
-        );
+        if (item.last_cross_index <= 4 && item.last_cross_index != null) {
+          return (
+            <div>
+              {item.symbol}-{item.last_cross_index}
+            </div>
+          );
+        }
       })}
     </div>
   );

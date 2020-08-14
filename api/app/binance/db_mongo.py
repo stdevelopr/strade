@@ -1,3 +1,14 @@
+from api.app.extensions import mongo_client
+from .remote_op import fetch_all_symbols_names, fetch_symbol_data
+from .utils import parse_binance_response_hdf5
+from api.app.indicators import MACD, RSI
+import h5py
+import numpy as np
+from datetime import datetime
+
+db = mongo_client["strade_db"]
+col = db["BINANCE"]
+
 def process_macd(symbol, timeframe):
     close = col.find_one({"symbol":symbol, "timeframe": timeframe}, {"data.close": 1, "_id":0})['data']['close']
     macd, macdsignal, macdhist = MACD(close)
@@ -9,6 +20,19 @@ def process_rsi(symbol, timeframe='30m'):
     real = RSI(close)
     col.update_one({"symbol":symbol, "timeframe":timeframe}, {"$set": {"indicators.RSI": real.tolist()}})
     return real
+
+
+### Symbol data
+def get_symbol_data_mongo(symbol, timeframe):
+    """ Get a symbol data from mongo database, if it does not exist fetch from binance, save and return"""
+    data = col.find_one({"symbol":symbol, "timeframe": timeframe})
+    if not data:
+        resp = fetch_symbol_data(symbol, timeframe)
+        parsed_resp = parse_binance_response_json(resp)
+        col.insert_one({"symbol": symbol, "timeframe":timeframe, "data": parsed_resp})
+        return parsed_resp
+    
+    return data['data']
 
 
 ### Symbols indicators
@@ -46,3 +70,6 @@ def get_all_symbols_names():
         fetch_and_save_all_symbols_names_to_database()
         return symbols
     return r['symbols']
+
+
+#####

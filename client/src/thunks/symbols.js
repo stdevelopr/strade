@@ -4,7 +4,7 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 export const getAllSymbols = createAsyncThunk("symbols/getAll", async () => {
   let resp;
   await axios.get(`api/binance/all_symbols`).then(res => {
-    resp = res.data.map(s => ({ text: s, value: s }));
+    resp = res.data.map(s => JSON.parse(s.replace(/'/g, '"')));
   });
   return resp;
 });
