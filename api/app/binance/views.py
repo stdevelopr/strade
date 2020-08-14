@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, current_app
 from .remote_op import binance_connect, socket_connect, socket_stop
-from .db_hdf5 import get_all_symbols, get_symbol_data,  get_symbol_indicator_hdf5, fill_db_all_symbols_data
+from .db_hdf5 import get_all_symbols, get_symbol_data,  get_symbol_indicator_hdf5, fill_db_all_symbols_data, atualize_symbol_data
 from .hunting import hunt_macd
 from .trading import simulate_macd_trade, simulate_macd_trade_crossover, simulate_rsi_trade
 from .prophet_forecast import forecast_data
@@ -190,6 +190,11 @@ def prepare_data_route(symbol, timeframe):
 # ADMIN ##############################
 @binance_bp.route('/admin/fill_db/<timeframe>')
 def fill_db(timeframe):
-    result = fill_db_all_symbols_data(timeframe)
+    result = fill_db_all_symbols_data(timeframe, reset=True)
+    return jsonify(result)
+
+@binance_bp.route('/admin/atualize/<timeframe>/<symbol>')
+def atualize_symbol(timeframe, symbol):
+    result = atualize_symbol_data(timeframe, symbol)
     return jsonify(result)
 

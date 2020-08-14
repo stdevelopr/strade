@@ -4,7 +4,7 @@ from .utils import parse_binance_response_hdf5
 from api.app.indicators import MACD, RSI
 import h5py
 import numpy as np
-from datetime import datetime
+from datetime import datetime, date
 from flask import jsonify
 import json
 
@@ -22,7 +22,7 @@ col = db["BINANCE"]
 #     return ma
 
 # HDF%
-def process_macd_hdf5(symbol, timeframe):
+def process_macd_hdf5(symbol: str, timeframe):
     """ Calculates the MACD for a given symbol and save to hdf5 database
     
     Inputs: 
@@ -34,8 +34,8 @@ def process_macd_hdf5(symbol, timeframe):
     with h5py.File("binance.hdf5", "a") as f:
         close = get_symbol_data(symbol, timeframe)['close']
         macd, macdsignal, macdhist = MACD(close)
-        arr = np.array([macd, macdsignal, macdhist])
-        f[f"{timeframe}/{symbol}/indicators/MACD"] = arr
+        arr = np.column_stack((macd, macdsignal, macdhist))
+        f.create_dataset(f"{timeframe}/{symbol}/indicators/MACD", data=arr, shape=arr.shape, maxshape=(None, arr.shape[1]))
         f[f"{timeframe}/{symbol}/indicators/MACD"].attrs['column_names'] = ['MACD', 'MACDSIG', 'MACDHIST']
         print("saving macd", symbol)
         return {"MACD": macd, "MACDSIG": macdsignal, "MACDHIST": macdhist}
@@ -71,7 +71,7 @@ def get_symbol_indicator_hdf5(symbol, indicator, timeframe):
         data = f.get(f"{timeframe}/{symbol}/indicators/{indicator}")
         if data:
             if indicator == "MACD":
-                return {"MACD": data[0], "MACDSIG": data[1], "MACDHIST": data[2]}
+                return {"MACD": data[:, 0], "MACDSIG": data[:, 1], "MACDHIST": data[:, 2]}
             elif indicator == "RSI":
                 return {"RSI": data[0:]}
 
@@ -125,10 +125,29 @@ def refresh_all_symbols_data(timeframe):
                 print(e)
 
 
+def atualize_symbol_data(timeframe, symbol):
+    """ Atualize the data for a given timeframe and symbol """
+    last_update = get_symbol_data_last_entry(timeframe, symbol)
+    if timeframe == '1d':
+        days = days_diff(last_update)
+        if days > 0:
+            resp = fetch_symbol_data(symbol, timeframe, limit=days)
+            with h5py.File("binance.hdf5", "a") as f:
+                resp_arr = np.array(resp).astype(float)
+                f[f"{timeframe}/{symbol}/data"].resize(f[f"{timeframe}/{symbol}/data"].shape[0]+days, axis=0)
+                print("Actual shape", f[f"{timeframe}/{symbol}/data"].shape)
+            # f[f"{timeframe}/{symbol}/data"] = np.array(resp_arr)
+            # f[f"{timeframe}/{symbol}/data"].attrs['column_names'] = [
+            #     'open_time', 'open', 'high', 'low', 'close', 'volume', 
+            #     'close_time', 'quote_asset_volume', 'number_trades', 
+            #     'taker_buy_base_asset_volume', 'taker_buy_quote_asset_volume', 
+            #     'can_be_ignored']
+            # f[f"{timeframe}/{symbol}/data"].attrs["last_update"] = datetime.timestamp(datetime.now())
+            return "ATUALIZE"
 
 
 
-def get_all_symbols_indicator(timeframe):
+def get_all_symbols_indicator(timeframe, reset=False):
     """ Get the same indicator (MACD) for all symbols at once
 
     Inputs:
@@ -140,14 +159,24 @@ def get_all_symbols_indicator(timeframe):
     """
 
     with h5py.File("binance.hdf5", "a") as f:
-        symbols = f.get(f"/{timeframe}")
+        symbols = get_all_symbols_names(only_tradeable=True)
         macd_list = []
         for s in symbols:
-            indicator = f.get(f"/{timeframe}/{s}/indicators/MACD")
-            try:
-                macd_list.append({"symbol": s, "MACDHIST": indicator[2]})
-            except:
-                pass
+            if not reset:
+                indicator = f.get(f"/{timeframe}/{s}/indicators/MACD")
+                if indicator:
+                    macd_list.append({"symbol": s, "MACDHIST": indicator[:,2]})
+                else:
+                    indicator = process_macd_hdf5(s, timeframe)
+                    macd_list.append({"symbol": s, "MACDHIST": indicator["MACDHIST"]})
+            elif reset:
+                try:
+                    del f[f"/{timeframe}/{s}/indicators/MACD"]
+                except Exception as e:
+                    print("error deleting", e)
+                indicator = process_macd_hdf5(s, timeframe)
+                macd_list.append({"symbol": s, "MACDHIST": indicator["MACDHIST"]})
+
 
     return macd_list
 
@@ -174,7 +203,7 @@ def get_symbol_data(symbol, timeframe):
             return r
 
 
-def fill_db_all_symbols_data(timeframe):
+def fill_db_all_symbols_data(timeframe, reset=False):
     """ Fetchs the data for all symbols and save to database
     
     Inputs: 
@@ -183,19 +212,23 @@ def fill_db_all_symbols_data(timeframe):
     
     """
     with h5py.File("binance.hdf5", "a") as f:
+        if reset:
+            try:
+                del f[f"/{timeframe}"]
+            except Exception as e:
+                print("Error", e)
         for symbol in get_all_symbols_names():
-            if f"/{timeframe}/{symbol}" not in f:
-                print(f"Fetching {symbol}...")
-                resp = fetch_symbol_data(symbol, timeframe)
-                resp_arr = np.array(resp).astype(float)
-                f[f"{timeframe}/{symbol}/data"] = np.array(resp_arr)
-                f[f"{timeframe}/{symbol}/data"].attrs['column_names'] = [
-                    'open_time', 'open', 'high', 'low', 'close', 'volume', 
-                    'close_time', 'quote_asset_volume', 'number_trades', 
-                    'taker_buy_base_asset_volume', 
-                    'taker_buy_quote_asset_volume', 'can_be_ignored']
-                f[f"{timeframe}/{symbol}/data"].attrs["last_update"] = datetime.timestamp(datetime.now())
-                print("Ok.")
+            print(f"Fetching {symbol}...")
+            resp = fetch_symbol_data(symbol, timeframe)
+            resp_arr = np.array(resp).astype(float)
+            f.create_dataset(f"{timeframe}/{symbol}/data", data= np.array(resp_arr),shape=resp_arr.shape, dtype=float, maxshape=(None, resp_arr.shape[1]))
+            f[f"{timeframe}/{symbol}/data"].attrs['column_names'] = [
+                'open_time', 'open', 'high', 'low', 'close', 'volume', 
+                'close_time', 'quote_asset_volume', 'number_trades', 
+                'taker_buy_base_asset_volume', 
+                'taker_buy_quote_asset_volume', 'can_be_ignored']
+            f[f"{timeframe}/{symbol}/data"].attrs["last_update"] = datetime.timestamp(datetime.now())
+            print("Ok.")
                 
         print("Completed")
 
@@ -209,6 +242,7 @@ def fetch_and_save_all_symbols_to_database():
     Returns: a list with all symbols names(strings)
     
     """
+    print("Fetching all and saving to database...")
     symbols = fetch_all_symbols()
     with h5py.File("binance.hdf5", "a") as f:
         try:
@@ -233,7 +267,7 @@ def get_all_symbols(refresh=False) -> 'a list of dicts':
             return fetch_and_save_all_symbols_to_database()
 
 
-def get_all_symbols_names(refresh=False) -> list:
+def get_all_symbols_names(refresh=False, only_tradeable=False) -> list:
     """ Gets all symbols names
     
     Inputs: 
@@ -242,10 +276,50 @@ def get_all_symbols_names(refresh=False) -> list:
     """
     with h5py.File("binance.hdf5", "a") as f:
         symbols = f.get('/all_symbols')
+        list_names =[]
         if symbols and not refresh:
-            return [json.loads(s.replace("'", "\""))['symbol'] for s in symbols]
+            for symbol in symbols:
+                symbol_info = json.loads(symbol.replace("'", "\""))
+                if only_tradeable:
+                    if symbol_info['status'] == "TRADING":
+                        list_names.append(symbol_info['symbol'])
+                else:
+                    list_names.append(symbol_info['symbol'])
+            return list_names
         else:
             return fetch_and_save_all_symbols_to_database()
+
+
+def get_symbol_data_last_entry(timeframe, symbol):
+    """ Gets the last data entry for a given timeframe and symbol
+    
+    Inputs: 
+        timeframe: string
+        symbol: string
+    Returns: a number with the last timestamp
+    """
+    with h5py.File("binance.hdf5", "a") as f:
+        return f[f"{timeframe}/{symbol}/data"][-1, 6]
+
+    
+def get_day_from_timestamp(timestamp):
+    return date.fromtimestamp(timestamp).day
+    
+
+def days_diff(timestamp):
+    """ Verify if a timestamp day is before today
+    Inputs: 
+        timestamp: number
+    Returns: true if the timestamp day if before today
+    """
+    print("V",  timestamp)
+    # delta = datetime.today().date() - date.fromtimestamp(timestamp)
+    return 0
+
+
+
+
+
 
 
 

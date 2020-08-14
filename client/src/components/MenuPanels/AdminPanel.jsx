@@ -19,6 +19,13 @@ const AdminPanel = () => {
       <button onClick={() => fetch("/api/binance/admin/fill_db/" + timeframe)}>
         Fill database
       </button>
+      <button
+        onClick={() =>
+          fetch("/api/binance/admin/atualize/" + timeframe + "/" + symbol)
+        }
+      >
+        Atualize Symbol
+      </button>
     </div>
   );
 };

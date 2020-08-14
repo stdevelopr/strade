@@ -55,16 +55,18 @@ def binance_connect() -> object:
     response = client.get_exchange_info()
     return response
 
-def fetch_all_symbols() -> list:
+def fetch_all_symbols(log=False) -> list:
     """ Returns a list of dicts containing the symbols info directly from the exchange """
     resp = client.get_exchange_info()
-    symbols = [{"symbol": i["symbol"], "baseAsset": i["baseAsset"], "quoteAsset": i["quoteAsset"]} for i in resp["symbols"]]
+    if log:
+            print(resp)
+    symbols = [{"symbol": i["symbol"], "baseAsset": i["baseAsset"], "quoteAsset": i["quoteAsset"], "status": i["status"]} for i in resp["symbols"]]
     return symbols
 
-def fetch_symbol_data(symbol:str, timeframe:str ) -> list :
+def fetch_symbol_data(symbol:str, timeframe:str, *, limit=1000 ) -> list :
     """ Returns the data for a given symbol """
     print(f"fetching {symbol}, timeframe: {timeframe}")
 
-    data = client.get_klines(symbol=symbol, interval=timeframe, limit=1000)
+    data = client.get_klines(symbol=symbol, interval=timeframe, limit=limit)
     return data
     
