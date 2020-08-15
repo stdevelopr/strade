@@ -61,6 +61,12 @@ const Sidenav = () => {
         >
           Admin.
         </p>
+        <p
+          onClick={() => setContext("DashBoard")}
+          style={setSelectedStyle("DashBoard")}
+        >
+          Dash.
+        </p>
       </div>
     </div>
   );

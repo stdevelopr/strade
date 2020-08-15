@@ -7,12 +7,14 @@ import HuntPairsPanel from "./MenuPanels/HuntPairsPanel";
 import RealTimePanel from "./MenuPanels/RealTimePanel";
 import AIPanel from "./MenuPanels/AIPanel";
 import AdminPanel from "./MenuPanels/AdminPanel";
+import DashBoardPanel from "./MenuPanels/DashBoardPanel";
 
 const SideMenu = () => {
   const open = useSelector(state => state.pageContext.openSideNavMenu);
   const context = useSelector(state => state.menuContext.navSideMenuContext);
   const dispatch = useDispatch();
   const symbol = useSelector(state => state.symbols.contextSymbol);
+
   return (
     <div
       style={Object.assign({}, styles.base, open ? styles.open : styles.close)}
@@ -30,6 +32,7 @@ const SideMenu = () => {
         {context == "realTime" && <RealTimePanel />}
         {context == "AI" && <AIPanel />}
         {context == "Admin" && <AdminPanel />}
+        {context == "DashBoard" && <DashBoardPanel />}
       </div>
     </div>
   );

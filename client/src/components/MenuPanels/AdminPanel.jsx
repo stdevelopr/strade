@@ -26,6 +26,11 @@ const AdminPanel = () => {
       >
         Atualize Symbol
       </button>
+      <button
+        onClick={() => fetch("/api/binance//admin/symbol_info/" + symbol)}
+      >
+        Symbol Info
+      </button>
     </div>
   );
 };

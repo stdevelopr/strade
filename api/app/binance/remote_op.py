@@ -69,4 +69,30 @@ def fetch_symbol_data(symbol:str, timeframe:str, *, limit=1000 ) -> list :
 
     data = client.get_klines(symbol=symbol, interval=timeframe, limit=limit)
     return data
+
+def get_symbol_info(symbol):
+        info = client.get_symbol_info(symbol)
+        return info
+
+def get_balance():
+        assets = get_assets()
+        btc_sum = []
+        for a in assets:
+                if a['asset'] != "BTC":
+                        asset_qtd = float(a["free"]) + float(a["locked"])
+                        avg_price = client.get_avg_price(symbol=a["asset"]+"BTC")
+                        btc_sum.append(float(avg_price['price'])*asset_qtd)
+                else:
+                        btc_sum.append(float(a["free"]) + float(a["locked"]))
+
+        return sum(btc_sum)
+
+def get_assets():
+        assets_list = []
+        info = client.get_account()
+        for i in info['balances']:
+                if float(i["free"])!=0 or float(i["locked"]) !=0:
+                        assets_list.append(i)
+        return assets_list
+
     

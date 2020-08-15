@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, current_app
-from .remote_op import binance_connect, socket_connect, socket_stop
+from .remote_op import binance_connect, socket_connect, socket_stop, get_balance, get_assets, get_symbol_info
 from .db_hdf5 import get_all_symbols, get_symbol_data,  get_symbol_indicator_hdf5, fill_db_all_symbols_data, atualize_symbol_data
 from .hunting import hunt_macd
 from .trading import simulate_macd_trade, simulate_macd_trade_crossover, simulate_rsi_trade
@@ -197,4 +197,21 @@ def fill_db(timeframe):
 def atualize_symbol(timeframe, symbol):
     result = atualize_symbol_data(timeframe, symbol)
     return jsonify(result)
+
+@binance_bp.route('/admin/symbol_info/<symbol>')
+def info_symbol(symbol):
+    result = get_symbol_info(symbol)
+    return jsonify(result)
+
+
+# DASHBOARD
+@binance_bp.route('/dashboard/balance')
+def dashboard_balance():
+    balance = get_balance()
+    return jsonify(balance)
+
+@binance_bp.route('/dashboard/assets')
+def dashboard_assets():
+    assets = get_assets()
+    return jsonify(assets)
 
