@@ -1,10 +1,11 @@
 from flask import Blueprint, jsonify, current_app
-from .remote_op import binance_connect, socket_connect, socket_stop, get_balance, get_assets, get_symbol_info
+from .remote_op import binance_connect, socket_connect, socket_stop, get_balance, get_assets, get_symbol_info, get_trade_history, get_all_trades_info
 from .db_hdf5 import get_all_symbols, get_symbol_data,  get_symbol_indicator_hdf5, fill_db_all_symbols_data, atualize_symbol_data
+from .db_mongo import save_symbol_historic_trade, save_symbol_historic_orders, get_orders_historic, get_trades_historic
 from .hunting import hunt_macd
 from .trading import simulate_macd_trade, simulate_macd_trade_crossover, simulate_rsi_trade
-from .prophet_forecast import forecast_data
-from .AI import calculate_extrema, prepare_data, buid_model, train_model
+# from .prophet_forecast import forecast_data
+# from .AI import calculate_extrema, prepare_data, buid_model, train_model
 import json
 from api.app.extensions import mongo_client, socketio
 from .io_blueprint import IOBlueprint
@@ -115,16 +116,16 @@ def hunting_macd(timeframe):
 
 
 # PROPHET #################################
-@binance_bp.route('/prophet/<symbol>')
-def prophet_forecast(symbol):
-    data = get_symbol_data(symbol)
-    before, future, last_date, forecast = forecast_data(symbol, 1)
-    before = before['y'].values[0]
-    last_date = last_date['y'].values[0]
-    print("GREATER", last_date > before)
-    print('FORECAST GREATER', list(forecast['yhat'].values())[0] > before)
+# @binance_bp.route('/prophet/<symbol>')
+# def prophet_forecast(symbol):
+#     data = get_symbol_data(symbol)
+#     before, future, last_date, forecast = forecast_data(symbol, 1)
+#     before = before['y'].values[0]
+#     last_date = last_date['y'].values[0]
+#     print("GREATER", last_date > before)
+#     print('FORECAST GREATER', list(forecast['yhat'].values())[0] > before)
 
-    return jsonify({"forecast": forecast})
+#     return jsonify({"forecast": forecast})
 
 #############################################
 
@@ -147,41 +148,41 @@ def real_time_stop():
 
 
 # AI ###########################################
-@binance_bp.route('/ai/calculate_extrema//<symbol>/<timeframe>')
-def ai_extrema(symbol, timeframe):
-    result = calculate_extrema(symbol, timeframe)
-    return jsonify(result)
+# @binance_bp.route('/ai/calculate_extrema//<symbol>/<timeframe>')
+# def ai_extrema(symbol, timeframe):
+#     # result = calculate_extrema(symbol, timeframe)
+#     return jsonify(result)
 
-@binance_bp.route('/ai/prepare_data/<symbol>/<timeframe>')
-def prepare_data_route(symbol, timeframe):
-    # shutil.rmtree('logs')
-    train_x, train_y, test_x, test_y = prepare_data(symbol, timeframe, columns=['close_time', 'close','volume'], index_column='close_time', indicators=[])
-    print("Train_x shape", train_x.shape)
-    print(train_x)
-    shape_x = train_x.shape[1:]
-    # train _x and train_y shape must match the number of dim
-    train_y.shape += (1,1)
-    # train_x = train_x.reshape(-1, shape_x)
-    # test_x = test_x.reshape(-1, shape_x)
-    test_y.shape += (1,1)
+# @binance_bp.route('/ai/prepare_data/<symbol>/<timeframe>')
+# def prepare_data_route(symbol, timeframe):
+#     # shutil.rmtree('logs')
+#     train_x, train_y, test_x, test_y = prepare_data(symbol, timeframe, columns=['close_time', 'close','volume'], index_column='close_time', indicators=[])
+#     print("Train_x shape", train_x.shape)
+#     print(train_x)
+#     shape_x = train_x.shape[1:]
+#     # train _x and train_y shape must match the number of dim
+#     train_y.shape += (1,1)
+#     # train_x = train_x.reshape(-1, shape_x)
+#     # test_x = test_x.reshape(-1, shape_x)
+#     test_y.shape += (1,1)
 
-    print("Sample shape", shape_x)
+#     print("Sample shape", shape_x)
 
-    print(f"train: {len(train_x)} validation:{len(train_y)}")
-    print(f"dont buy {(test_y==0).sum()} , buys {(test_y==1).sum()}")
-    print(f"validation dont buy {(test_y==0).sum()} , validation buys {(test_y==1).sum()}")
+#     print(f"train: {len(train_x)} validation:{len(train_y)}")
+#     print(f"dont buy {(test_y==0).sum()} , buys {(test_y==1).sum()}")
+#     print(f"validation dont buy {(test_y==0).sum()} , validation buys {(test_y==1).sum()}")
 
-    network = buid_model(shape_x)
-    network = train_model(network, train_x, train_y, test_x, test_y)
-    # # # y_new = network.predict(test_x)
-    # # # print("Prediction", y_new)
-    # # # print("A", np.argmax(y_new, axis=1))
-    # test_loss, test_acc = network.evaluate(test_x, test_y)
-    # print("Loss", test_loss, "Acc", test_acc)
+#     network = buid_model(shape_x)
+#     network = train_model(network, train_x, train_y, test_x, test_y)
+#     # # # y_new = network.predict(test_x)
+#     # # # print("Prediction", y_new)
+#     # # # print("A", np.argmax(y_new, axis=1))
+#     # test_loss, test_acc = network.evaluate(test_x, test_y)
+#     # print("Loss", test_loss, "Acc", test_acc)
 
 
 
-    return jsonify({"train_x": train_x.tolist()})
+#     return jsonify({"train_x": train_x.tolist()})
 
 
 #######################################
@@ -214,4 +215,17 @@ def dashboard_balance():
 def dashboard_assets():
     assets = get_assets()
     return jsonify(assets)
+
+@binance_bp.route('/dashboard/trade_history/<symbol>')
+def dashboard_trade_history(symbol):
+    # info = get_all_trades_info()
+    # trades = info['trades']
+    # orders = info['orders']
+    # save_symbol_historic_trade("all", trades)
+    # save_symbol_historic_orders("all", orders)
+    trades = get_trades_historic()['historic']
+    orders = get_orders_historic()['historic']
+    print(orders)
+    return jsonify({"trades": trades, "orders": orders})
+
 

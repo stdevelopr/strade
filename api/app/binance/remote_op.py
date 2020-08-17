@@ -95,4 +95,41 @@ def get_assets():
                         assets_list.append(i)
         return assets_list
 
-    
+def get_trade_history(symbol):
+        get_all_trades_info()
+        # details = client.get_my_trades(symbol=symbol)
+        # print(details)
+        orders = client.get_all_orders(symbol=symbol, limit=10)
+        return orders
+
+
+def get_quote_assets():
+        symbols = fetch_all_symbols()
+        quotes = set()
+        for s in symbols:
+                quotes.add(s['quoteAsset'])
+        return quotes
+
+def get_all_trades_info():
+        assets = [asset['asset'] for asset in get_assets()]
+        symbols = fetch_all_symbols()
+        possible_trades = set()
+        trades_info = []
+        orders_info= []
+        for a in assets:        
+                for s in symbols:
+                        if a == s['baseAsset']:
+                                if s['quoteAsset'] in assets:
+                                        possible_trades.add(s['symbol'])
+
+        for symbol in list(possible_trades):
+                trades = client.get_my_trades(symbol=symbol)
+                if len(trades) > 0:
+                        print("trades", trades)
+                        trades_info.append(trades)
+                orders = client.get_all_orders(symbol=symbol, limit=10)
+                if len(orders) > 0:
+                        print("orders", orders)
+                        orders_info.append(orders)
+
+        return {"trades": trades_info, "orders": orders_info}

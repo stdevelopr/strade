@@ -1,5 +1,5 @@
 from api.app.extensions import mongo_client
-from .remote_op import fetch_all_symbols_names, fetch_symbol_data
+from .remote_op import fetch_all_symbols, fetch_symbol_data
 from .utils import parse_binance_response_hdf5
 from api.app.indicators import MACD, RSI
 import h5py
@@ -73,3 +73,20 @@ def get_all_symbols_names():
 
 
 #####
+
+### Acount Info
+def save_symbol_historic_trade(symbol, info):
+    print("saving trades....")
+    col.update_one({"doc_name":"trade_history", "symbol": symbol}, {"$set": {"historic": info}}, upsert=True)
+
+def save_symbol_historic_orders(symbol, info):
+    print("saving orders....")
+    col.update_one({"doc_name":"orders_history", "symbol": symbol}, {"$set": {"historic": info}}, upsert=True)
+
+def get_trades_historic():
+    trades = col.find_one({"doc_name": "trade_history"})
+    return trades
+
+def get_orders_historic():
+    orders = col.find_one({"doc_name": "orders_history"})
+    return orders

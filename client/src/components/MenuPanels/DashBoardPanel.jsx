@@ -8,7 +8,7 @@ const DashBoardPanel = () => {
   //   const timeframe = useSelector(
   //     state => state.symbols.timeframes.contextTimeFrame
   //   );
-  //   const symbol = useSelector(state => state.symbols.contextSymbol);
+  const symbol = useSelector(state => state.symbols.contextSymbol);
 
   //   const pairsInfo = useSelector(state => state.huntPairs.all);
 
@@ -26,6 +26,12 @@ const DashBoardPanel = () => {
       .then(res => res.json())
       .then(r => setAssetsList(r));
   };
+
+  const get_trade_history = () => {
+    fetch("/api/binance/dashboard/trade_history/" + symbol).then(res =>
+      console.log(res)
+    );
+  };
   return (
     <div>
       <h3>Dashboard</h3>
@@ -33,6 +39,7 @@ const DashBoardPanel = () => {
       <p>{balance}</p>
       <button onClick={() => get_balance()}>Balance</button>
       <button onClick={() => get_assets()}>Assets</button>
+      <button onClick={() => get_trade_history()}>Trade history</button>
       {assetsList.map(item => {
         return (
           <div>
