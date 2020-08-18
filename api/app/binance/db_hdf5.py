@@ -124,9 +124,10 @@ def fill_db_indicator_hdf5(indicator, timeframe):
 #                 print(e)
 
 
-def atualize_symbol_data(timeframe, symbol):
+def atualize_symbol_data(timeframe, symbol, log=False):
     """ Atualize the data for a given timeframe and symbol """
     last_update = get_symbol_data_last_entry(timeframe, symbol)
+    # print("symbols status", get_symbol_status(symbol, timeframe))
     print("last_update", last_update)
     if timeframe == '1d':
         days = time_diff(last_update).days
@@ -135,17 +136,27 @@ def atualize_symbol_data(timeframe, symbol):
             resp = fetch_symbol_data(symbol, timeframe, limit=days)
             with h5py.File("binance.hdf5", "a") as f:
                 resp_arr = np.array(resp).astype(float)
-                print("Previous shape", f[f"{timeframe}/{symbol}/data"].shape)
                 f[f"{timeframe}/{symbol}/data"].resize(f[f"{timeframe}/{symbol}/data"].shape[0]+1, axis=0)
-                print("Actual shape", f[f"{timeframe}/{symbol}/data"].shape)
-                f[f"{timeframe}/{symbol}/data"] = np.array(resp_arr)
-                f[f"{timeframe}/{symbol}/data"].attrs['column_names'] = [
-                    'open_time', 'open', 'high', 'low', 'close', 'volume', 
-                    'close_time', 'quote_asset_volume', 'number_trades', 
-                    'taker_buy_base_asset_volume', 'taker_buy_quote_asset_volume', 
-                    'can_be_ignored']
-                f[f"{timeframe}/{symbol}/data"].attrs["last_update"] = datetime.timestamp(datetime.now())
-            return "ATUALIZE"
+                if log:
+                    print("New data lenght: ", len(resp_arr), "shape", resp_arr.shape)
+                    print("Previous shape", f[f"{timeframe}/{symbol}/data"].shape)
+                    print("Actual shape", f[f"{timeframe}/{symbol}/data"].shape)
+                f[f"{timeframe}/{symbol}/data"][-1,:] = resp_arr
+    # elif timeframe == '4h':
+    #     print("Heree")
+    #     days = time_diff(last_update).days
+    #     print("timediff hours", days)
+    #     if days>0:
+    #         resp = fetch_symbol_data(symbol, timeframe, limit=days)
+    #         with h5py.File("binance.hdf5", "a") as f:
+    #             resp_arr = np.array(resp).astype(float)
+    #             f[f"{timeframe}/{symbol}/data"].resize(f[f"{timeframe}/{symbol}/data"].shape[0]+1, axis=0)
+    #             if log:
+    #                 print("New data lenght: ", len(resp_arr), "shape", resp_arr.shape)
+    #                 print("Previous shape", f[f"{timeframe}/{symbol}/data"].shape)
+    #                 print("Actual shape", f[f"{timeframe}/{symbol}/data"].shape)
+    #                 f[f"{timeframe}/{symbol}/data"][-1,:] = resp_arr
+    return "ATUALIZE"
 
 
 def get_all_symbols_indicator(timeframe, reset=False):
@@ -204,7 +215,7 @@ def get_symbol_data(symbol, timeframe):
             return r
 
 
-def fill_db_all_symbols_data(timeframe, reset=True):
+def fill_db_all_symbols_data(timeframe, refresh: bool, reset: bool):
     """ Fetchs the data for all symbols and save to database
     
     Inputs: 
@@ -213,23 +224,35 @@ def fill_db_all_symbols_data(timeframe, reset=True):
     
     """
     with h5py.File("binance.hdf5", "a") as f:
+        print("reset", reset)
         if reset:
+            print("erasing timeframe...")
             try:
                 del f[f"/{timeframe}"]
             except Exception as e:
                 print("Error", e)
-        for symbol in get_all_symbols_names():
-            print(f"Fetching {symbol}...")
-            resp = fetch_symbol_data(symbol, timeframe)
-            resp_arr = np.array(resp).astype(float)
-            f.create_dataset(f"{timeframe}/{symbol}/data", data= np.array(resp_arr),shape=resp_arr.shape, dtype=float, maxshape=(None, resp_arr.shape[1]))
-            f[f"{timeframe}/{symbol}/data"].attrs['column_names'] = [
-                'open_time', 'open', 'high', 'low', 'close', 'volume', 
-                'close_time', 'quote_asset_volume', 'number_trades', 
-                'taker_buy_base_asset_volume', 
-                'taker_buy_quote_asset_volume', 'can_be_ignored']
-            f[f"{timeframe}/{symbol}/data"].attrs["last_update"] = datetime.timestamp(datetime.now())
-            print("Ok.")
+        for s in get_all_symbols():
+            s = json.loads(s.replace("'", '"'))
+            symbol = s['symbol']
+            status = s['status']
+            if refresh:
+                if(status == "TRADING"):
+                    print("Atualizing ", symbol)
+                    f[f"{timeframe}/{symbol}/data"].attrs["last_update"]
+                    atualize_symbol_data(symbol=symbol, timeframe=timeframe)
+                    print("ok")
+            else:
+                print(f"Fetching {symbol}...")
+                resp = fetch_symbol_data(symbol, timeframe)
+                resp_arr = np.array(resp).astype(float)
+                f.create_dataset(f"{timeframe}/{symbol}/data", data= np.array(resp_arr),shape=resp_arr.shape, dtype=float, maxshape=(None, resp_arr.shape[1]))
+                f[f"{timeframe}/{symbol}/data"].attrs['column_names'] = [
+                    'open_time', 'open', 'high', 'low', 'close', 'volume', 
+                    'close_time', 'quote_asset_volume', 'number_trades', 
+                    'taker_buy_base_asset_volume', 
+                    'taker_buy_quote_asset_volume', 'can_be_ignored']
+                f[f"{timeframe}/{symbol}/data"].attrs["last_update"] = datetime.timestamp(datetime.now())
+                print("Ok.")
                 
         print("Completed")
 
@@ -300,7 +323,6 @@ def get_symbol_data_last_entry(timeframe, symbol):
     Returns: a number with the last timestamp
     """
     with h5py.File("binance.hdf5", "a") as f:
-        print("HA")
         return f[f"{timeframe}/{symbol}/data"][-1, 6]
 
     
@@ -308,14 +330,25 @@ def get_day_from_timestamp(timestamp):
     return date.fromtimestamp(timestamp).day
     
 
-def time_diff(timestamp):
+def time_diff(timestamp, log=True):
     """ Verify the time difference between a timestamp and the actual time
     Inputs: 
         timestamp: number
     Returns: <class 'datetime.timedelta'>
     """
-    delta = datetime.now() - datetime.fromtimestamp(timestamp/1000)
+    received_date = datetime.fromtimestamp(timestamp/1000)
+    today_date = datetime.now()
+    delta = today_date - received_date
+    if log:
+        print("Today date", today_date)
+        print("Received date: ", received_date)
+        print("Delta days", delta.days)
     return delta
+
+def get_symbol_status(symbol, timeframe):
+    with h5py.File("binance.hdf5", "a") as f:
+        return f[f"{timeframe}/{symbol}/data"].attrs("status")
+
 
 
 
