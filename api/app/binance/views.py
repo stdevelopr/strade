@@ -225,7 +225,6 @@ def dashboard_trade_history(symbol):
     # save_symbol_historic_orders("all", orders)
     trades = get_trades_historic()['historic']
     orders = get_orders_historic()['historic']
-    print(orders)
     return jsonify({"trades": trades, "orders": orders})
 
 
