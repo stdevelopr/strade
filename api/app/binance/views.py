@@ -191,7 +191,7 @@ def real_time_stop():
 # ADMIN ##############################
 @binance_bp.route('/admin/fill_db/<timeframe>')
 def fill_db(timeframe):
-    result = fill_db_all_symbols_data(timeframe, refresh=True, reset=False)
+    result = fill_db_all_symbols_data(timeframe, refresh=False, reset=True)
     return jsonify(result)
 
 @binance_bp.route('/admin/atualize/<timeframe>/<symbol>')

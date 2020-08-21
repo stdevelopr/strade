@@ -49,12 +49,21 @@ const DashBoardPanel = () => {
     setModalOpen(false);
   };
 
-  const tradePrice = order => {
+  const tradeTime = order => {
     const orderId = order.orderId;
     const match = trades
       .map(item => item.filter(trade => trade.orderId == orderId))
       .filter(arr => arr.length > 0);
     if (match.length == 1) return <Table.Cell>{match[0][0].price}</Table.Cell>;
+    else return <Table.Cell>-</Table.Cell>;
+  };
+
+  const tradePrice = order => {
+    const orderId = order.orderId;
+    const match = trades
+      .map(item => item.filter(trade => trade.orderId == orderId))
+      .filter(arr => arr.length > 0);
+    if (match.length == 1) return <Table.Cell>{match[0][0].time}</Table.Cell>;
     else return <Table.Cell>-</Table.Cell>;
   };
 
@@ -67,6 +76,8 @@ const DashBoardPanel = () => {
       return <Table.Cell>{match[0][0].quoteQty}</Table.Cell>;
     else return <Table.Cell>-</Table.Cell>;
   };
+
+  console.log("orders", orders);
   return (
     <div>
       <h3>Dashboard</h3>
@@ -89,12 +100,12 @@ const DashBoardPanel = () => {
         onClose={() => setModalOpen(false)}
         onOpen={() => setModalOpen(true)}
         open={modalOpen}
-        size="large"
+        size="fullscreen"
         // trigger={<Button>Show Modal</Button>}
       >
         <Modal.Header>Orders</Modal.Header>
         <Modal.Content>
-          <Table basic="very">
+          <Table sorteable celled structured>
             <Table.Header>
               <Table.Row>
                 <Table.HeaderCell rowSpan="2">Pair</Table.HeaderCell>
@@ -105,11 +116,13 @@ const DashBoardPanel = () => {
                 <Table.HeaderCell rowSpan="2">Filled</Table.HeaderCell>
                 <Table.HeaderCell rowSpan="2">QuoteQTY</Table.HeaderCell>
                 <Table.HeaderCell rowSpan="2">Status</Table.HeaderCell>
-                <Table.HeaderCell colSpan="2">Trades</Table.HeaderCell>
+                <Table.HeaderCell rowSpan="2">Time</Table.HeaderCell>
+                <Table.HeaderCell colSpan="3">Trades</Table.HeaderCell>
                 {/* <Table.HeaderCell>TradePrice</Table.HeaderCell>
                 <Table.HeaderCell>TradeQuoteAmount</Table.HeaderCell> */}
               </Table.Row>
               <Table.Row>
+                <Table.HeaderCell>Time</Table.HeaderCell>
                 <Table.HeaderCell>Price</Table.HeaderCell>
                 <Table.HeaderCell>QuoteAmount</Table.HeaderCell>
               </Table.Row>
@@ -128,8 +141,10 @@ const DashBoardPanel = () => {
                       <Table.Cell>{item.executedQty}</Table.Cell>
                       <Table.Cell>{item.origQuoteOrderQty}</Table.Cell>
                       <Table.Cell>{item.status}</Table.Cell>
+                      <Table.Cell>{item.time}</Table.Cell>
                       {tradePrice(item)}
                       {tradeAmount(item)}
+                      {tradeTime(item)}
                     </Table.Row>
                   );
                 });
