@@ -159,7 +159,7 @@ def atualize_symbol_data(timeframe, symbol, log=False):
     return "ATUALIZE"
 
 
-def get_all_symbols_indicator(timeframe, reset=False):
+def get_all_symbols_indicator(timeframe, reset=True):
     """ Get the same indicator (MACD) for all symbols at once
 
     Inputs:
