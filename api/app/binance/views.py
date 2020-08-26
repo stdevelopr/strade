@@ -216,14 +216,26 @@ def dashboard_assets():
     assets = get_assets()
     return jsonify(assets)
 
-@binance_bp.route('/dashboard/trade_history/<symbol>')
-def dashboard_trade_history(symbol, refresh=False):
-    if refresh:
-        info = get_all_trades_info()
-        trades = info['trades']
-        orders = info['orders']
-        save_symbol_historic_trade("all", trades)
-        save_symbol_historic_orders("all", orders)
+@binance_bp.route('/dashboard/trade_history')
+def dashboard_trade_history():
+    # if refresh:
+    #     info = get_all_trades_info()
+    #     trades = info['trades']
+    #     orders = info['orders']
+    #     save_symbol_historic_trade("all", trades)
+    #     save_symbol_historic_orders("all", orders)
+    trades = get_trades_historic()['historic']
+    orders = get_orders_historic()['historic']
+    return jsonify({"trades": trades, "orders": orders})
+
+
+@binance_bp.route('/dashboard/trade_history/atualize')
+def dashboard_trade_history_atualize():
+    info = get_all_trades_info()
+    trades = info['trades']
+    orders = info['orders']
+    save_symbol_historic_trade("all", trades)
+    save_symbol_historic_orders("all", orders)
     trades = get_trades_historic()['historic']
     orders = get_orders_historic()['historic']
     return jsonify({"trades": trades, "orders": orders})
