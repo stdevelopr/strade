@@ -105,7 +105,7 @@ const OrdersInfoModal = ({ open, setOpen }) => {
         </Dropdown>
       </Modal.Header>
       <Modal.Content>
-        <Table sorteable celled structured>
+        <Table celled structured>
           <Table.Header>
             <Table.Row>
               <Table.HeaderCell rowSpan="2">Pair</Table.HeaderCell>

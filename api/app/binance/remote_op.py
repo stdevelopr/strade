@@ -110,17 +110,28 @@ def get_quote_assets():
                 quotes.add(s['quoteAsset'])
         return quotes
 
-def get_all_trades_info():
-        assets = [asset['asset'] for asset in get_assets()]
+
+def possible_pairs(assets:list):
+        """ Returns a list of possible pairs based on a list of assets """
         symbols = fetch_all_symbols()
-        possible_trades = set()
-        trades_info = []
-        orders_info= []
+        possible_pairs = set()
+
         for a in assets:        
                 for s in symbols:
                         if a == s['baseAsset']:
                                 if s['quoteAsset'] in assets:
                                         possible_trades.add(s['symbol'])
+
+        return list(possible_pairs)
+
+
+
+def get_all_trades_info():
+        assets = [asset['asset'] for asset in get_assets()]
+        trades_info = []
+        orders_info= []
+        
+        possible_trades = possible_pairs(assets)
 
         for symbol in list(possible_trades):
                 trades = client.get_my_trades(symbol=symbol)
