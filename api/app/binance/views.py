@@ -1,5 +1,5 @@
-from flask import Blueprint, jsonify, current_app
-from .remote_op import binance_connect, socket_connect, socket_stop, get_balance, get_assets, get_symbol_info, get_trade_history, get_all_trades_info
+from flask import Blueprint, jsonify, current_app, request
+from .remote_op import binance_connect, socket_connect, socket_stop, get_balance, get_assets, get_symbol_info, get_trade_history, get_all_trades_info, get_assets_values
 from .db_hdf5 import get_all_symbols, get_symbol_data,  get_symbol_indicator_hdf5, fill_db_all_symbols_data, atualize_symbol_data
 from .db_mongo import save_symbol_historic_trade, save_symbol_historic_orders, get_orders_historic, get_trades_historic
 from .hunting import hunt_macd
@@ -215,6 +215,12 @@ def dashboard_balance():
 def dashboard_assets():
     assets = get_assets()
     return jsonify(assets)
+
+@binance_bp.route('/dashboard/assets/values', methods=["POST"])
+def dashboard_assets_values():
+    assets = request.json['assets']
+    values = get_assets_values(assets)
+    return jsonify(values)
 
 @binance_bp.route('/dashboard/trade_history')
 def dashboard_trade_history():

@@ -111,6 +111,18 @@ def get_quote_assets():
         return quotes
 
 
+def get_assets_values(assets):
+        assets_price = []
+        prices = client.get_all_tickers()
+        for asset in assets:
+                for item in prices:
+                        if asset+"BTC" == item['symbol']:
+                                assets_price.append({"asset": asset, "price": item['price']})
+                                break
+
+        return assets_price
+
+
 def possible_pairs(assets:list):
         """ Returns a list of possible pairs based on a list of assets """
         symbols = fetch_all_symbols()
